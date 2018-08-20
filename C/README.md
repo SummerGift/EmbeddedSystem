@@ -149,7 +149,7 @@ Dram读写速度虽然慢一点，但是便宜，容量大，所以目前主要�
 
 ### 2.3.2 关键：内存编址是以字节为单位的
 
-任何一个有效的内存地址都代表了一个字节的内存空间，这个大小是固定的，就是一个字节，即8bit.
+任何一个有效的内存地址都代表了一个字节的内存空间，这个大小是固定的，就是一个字节，即8bit。
 
 ### 2.3.3 内存和数据类型的关系
 
@@ -1274,11 +1274,9 @@ void rt_thread_idle_sethook(void (*hook)(void))
 
 栈会溢出：因为操作系统事先给定了栈的大小，如果在函数中无穷尽的分配栈内存总能用完。
 
- 
-
 2.堆内存详解：
 
-​    操作系统堆管理器管理：堆管理器是操作系统的一个模块，对管理内存分配灵活，按需分配。
+操作系统堆管理器管理：堆管理器是操作系统的一个模块，对管理内存分配灵活，按需分配。
 
 大块内存：堆管理器管理着很大的操作系统内存块，各进程可以按需申请使用，使用完释放。
 
@@ -1334,32 +1332,6 @@ void rt_thread_idle_sethook(void (*hook)(void))
 ​     1.函数内部使用，出了函数不会用到，就定义局部变量。
 
 ​     2.堆内存和数据段几乎拥有相同的属性，大部分时候是可以完全替换的，但是生命周期不一样。堆内存的生命周期是从malloc开始到free结束。而全局变量是从整个程序一开始执行就开始，直到整个程序结束才会消灭，伴随程序运行的一生。如果一个变量只是在程序的一个阶段有用，那么就申请堆内存，如果整个程序运行过程中都使用那么就适用全局变量。
-
- 
-
-​       
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
- 
-
-​    
-
- 
-
- 
 
 ## 6.2 字符串
 
@@ -1631,66 +1603,45 @@ Typeof关键字的作用是：typeif（a）时由变量a得到a的类型，typeo
 static struct nand_chip nand_chip[CFG_MAX_NAND_DEVICE];
 
 这句话是uboot里面存放存储器信息的数据结构，这就是一个结构体数组，其中nand_chip结构体类型为：
-
+```c
 struct nand_chip {
-
-​	int 		page_shift;
-
-​	u_char 		*data_buf;
-
-​	u_char 		*data_cache;
-
-​	int		cache_page;
-
-   ...;
-
-   ...;
-
+    int 		page_shift;
+    u_char 		*data_buf;
+    u_char 		*data_cache;
+    int		    cache_page;
+    ...;
+    ...;
 };
-
+```
 通过结构体数组的方式我们就可以构建一个存放多个nand_chip结构体的数组，访问的时候使用nand_chip[0]、nand_chip[1]等来访问数组内的结构体。
 
 ### 6.3.10 灵活的使用结构体2
 
 在编写一些外设底层程序的时候，可以将外设用到的所有的变量和底层函数都封装到一个结构体中，这样一是方便程序分层，而是可以通过更改挂载在结构体中的函数来更换底层函数而接口不变。另一方面让程序的结构显得有条理。比如说uboot中mmc的结构体：
 
+```
 struct mmc {
-
-​	struct list_head link;
-
-​	char name[32];
-
-​	void *priv;
-
-​	uint voltages;
-
-​	uint version;
-
-​	uint f_min;
-
-​	uint f_max;
-
-​	int high_capacity;
-
-​	uint bus_width;
-
-​	ushort rca;
-
-   ......;    //省略若干参数
-
-​	struct mmc_ext_csd	ext_csd;	/* mmc v4 extended card specific */
-
-​	block_dev_desc_t block_dev;
-
-​	int (*send_cmd)(struct mmc *mmc,
-
-​			struct mmc_cmd *cmd, struct mmc_data *data);
-
-​	void (*set_ios)(struct mmc *mmc);
-
-​	int (*init)(struct mmc *mmc);
+    struct list_head link;
+    char name[32];
+    void *priv;
+    uint voltages;
+    uint version;
+    uint f_min;
+    uint f_max;
+    int high_capacity;
+    uint bus_width;
+    ushort rca;
+    ......;    //省略若干参数
+    struct mmc_ext_csd	ext_csd;	/* mmc v4 extended card specific */
+    block_dev_desc_t block_dev;
+    int (*send_cmd)(struct mmc *mmc,
+                    struct mmc_cmd *cmd, struct mmc_data *data);
+    void (*set_ios)(struct mmc *mmc);
+    int (*init)(struct mmc *mmc);
 
 };
+
+```
 
 通过这个结构体将mmc相关的变量和函数都组织起来，要学会这种组织方式，以后在项目中应用，提高自己写的代码的规范性。
 
@@ -1857,11 +1808,7 @@ enum weekday{sun=7,mon=1,tue,wed,thu,fri,sat}day；
 
 1.预处理器定义了一些符号，他们的值或者是字符串常量，或者是十进制数字常量，__FILE__的含义是进行编译的源文件名。
 
-|      |                                |
-| ---- | ------------------------------ |
-|      | ![img](assets/wps3485.tmp.jpg) |
-
- 
+ ![img](assets/wps3485.tmp.jpg) 
 
 ### 7.1.2 预处理理论
 
@@ -1985,36 +1932,24 @@ __attribute__((__section__(".arch.info.init"))) = {   	\
 };
 ```
 
-   这里就是定义了一个machine_desc类型的结构体，设置段属性将结构体存放在.arch.info.init段。这里的##就是用来连接，所以MACHINE_START(SMDKV210, "SMDKV210")
+这里就是定义了一个machine_desc类型的结构体，设置段属性将结构体存放在.arch.info.init段。这里的##就是用来连接，所以MACHINE_START(SMDKV210, "SMDKV210")
 
 预处理器处理过后为：
-
+```
 static const struct machine_desc __mach_desc_SMDKV210	\
-
  __used							\
-
  __attribute__((__section__(".arch.info.init"))) = {	       \
-
-​	.nr		= MACH_TYPE_SMDKV210,		\
-
-​	.name		= "SMDKV210",
-
-​	.phys_io	= S3C_PA_UART & 0xfff00000,
-
-​	.io_pg_offst	= (((u32)S3C_VA_UART) >> 18) & 0xfffc,
-
-​	.boot_params	= S5P_PA_SDRAM + 0x100,
-
-​	.init_irq	       = s5pv210_init_irq,
-
-​	.map_io	= smdkc110_map_io,
-
-​	.init_machine	= smdkc110_machine_init,
-
-​	.timer		= &s5p_systimer,
-
+    .nr		= MACH_TYPE_SMDKV210,		\
+    .name		= "SMDKV210",
+    .phys_io	= S3C_PA_UART & 0xfff00000,
+    .io_pg_offst	= (((u32)S3C_VA_UART) >> 18) & 0xfffc,
+    .boot_params	= S5P_PA_SDRAM + 0x100,
+    .init_irq	       = s5pv210_init_irq,
+    .map_io	= smdkc110_map_io,
+    .init_machine	= smdkc110_machine_init,
+    .timer		= &s5p_systimer,
 };
-
+```
 ## 7.6 预处理器
 
 4.1.编译一个C程序的第一个步骤成为预处理阶段，C预处理器在源代码编译之前对其进行一些文本性质的操作。他的主要任务包括删
@@ -2055,7 +1990,9 @@ static const struct machine_desc __mach_desc_SMDKV210	\
 
 1.在一个面试中，技术面试HR提出让用宏定义写一个表示一年有多少秒的面试题，由于之前没有对面试题有很好的准备所以这里就没有考虑到这个宏的细节问题。
 
-\#define SEC_PER_YEAR 365*24*60*60
+```
+#define SEC_PER_YEAR 365*24*60*60
+```
 
 如果写成这样，那么首先就会存在这样几个问题。
 
@@ -2066,31 +2003,34 @@ static const struct machine_desc __mach_desc_SMDKV210	\
    3.即使像上面那条一样做了，也不一定能得到完美的结果，因为在16位平台上，无符号整形的值也不能放得下结果。所以应当写成  1UL*365*24*60*60。
 
   最终结果为：
-
-\#define  SEC_PER_YEAR  (1UL*365*24*60*60)
-
+```
+#define  SEC_PER_YEAR  (1UL*365*24*60*60)
+```
   这样就可以解决以上的问题，这里这个加括号的问题遇到过很多次了，为了避免异常的运算顺序，一定要加括号。
 
   然后就是数据溢出的问题，在编程的时候要避免数据溢出导致的错误，避免这种问题的方法就是要注意数据类型，要能放的下结果值的长度大小。
 
-关键点：1.当一个数字直接出现在程序中时，他的类型默认是int。
+关键点：
 
-​        2.一年有多少秒，这个数字刚好超过了int类型存储的范围。
+1.当一个数字直接出现在程序中时，他的类型默认是int。
+
+2.一年有多少秒，这个数字刚好超过了int类型存储的范围。
 
 2.好久以前看到宏定义换行用 \ 隔开，以为函数也能这么用，实际上是不行的，这里只有写宏的时候才能这么用。
 
 3.宏定义实例1：MAX宏，求两个数中较大的一个
 
-\#define MAX(a,b)   (((a)>(b)) ? (a) : (b) )
-
+```
+#define MAX(a,b)   (((a)>(b)) ? (a) : (b) )
+```
 关键点：1.要想到使用三目运算符。2.注意括号的使用。
 
 ## 7.10 uboot中的宏定义
 
 我在uboot中看到很多宏定义的数字，都带了括号，所以再次提醒自己在写宏定义的时候一定要加上括号才行。宏定义使用大写字母，间隔用下划线。
-
-\#define DM9000_IO			(CONFIG_DM9000_BASE)
-
+```
+#define DM9000_IO			(CONFIG_DM9000_BASE)
+```
 #  8 存储类、作用域、声明周期、链接属性
 
 ## 8.1 基本概念解析
@@ -2229,9 +2169,7 @@ STM32编译会产生HTM文件，里面有各个函数的编译信息，包括栈
 
 3.
 
-|      |                                |
-| ---- | ------------------------------ |
-|      | ![img](assets/wps3495.tmp.jpg) |
+ ![img](assets/wps3495.tmp.jpg) 
 
 BSS段（未初始化的全局变量），数据段（已初始化的全局变量），代码段（程序执行diamante），堆，栈。
 
@@ -2269,25 +2207,17 @@ BSS段（未初始化的全局变量），数据段（已初始化的全局变�
 
 当用昨天在同事编写IP地址转换函数的时候，用到了这个函数，sscanf是一个很好用的函数，利用它可以从字符串中取出整数、浮点数和字符串等等。第一次用，这个函数可以将字符串中不同类型的数据拿出来放在不同的地址中。但是在昨天使用的过程中功能实现了但是导致函数无法返回，找了很多原因最后发现原因是sscanf(str，"%d%d%s", &i,&i2, &s);比如这个函数，我们给定字符串中第一个参数为整形，但是后面给存储地址的时候只给了一个char型数组的某个位的指针，这样就无法存放的下四个字节数据，因为这样的缘故可能导致了内存处理出现问题，结果函数无法返回。
 为什么转换结果是正确的呢，因为这个函数存储的时候使用的大端模式，刚好把低位数据存到了内存的高八位，这样写了四个数据之后，这个数组的内容刚好是对的，但是冲掉了数组后的三个字节数据，这三个字节数据有可能是存放了有用的变量，所以导致函数无法返回。还有在栈中存放了函数的返回地址，冲掉了之后就无法返回。
-
- //unsigned int a[4]; 
-
-  unsigned char a[6]; 
-
-  unsigned int taddr;
-
-  sscanf(addr, "%d.%d.%d.%d", a, a+1, a+2, a+3);
-
-  taddr = ((_u32)a[0] & 0x000000FF);
-
-  taddr = (taddr << 8) + ((_u32)a[1] & 0x000000FF);
-
-  taddr = (taddr << 8) + ((_u32)a[2] & 0x000000FF);
-
-  taddr = (taddr << 8) + ((_u32)a[3] & 0x000000FF);
-
-  return taddr;
-
+```c
+    unsigned int a[4]; 
+    unsigned char a[6]; 
+    unsigned int taddr;
+    sscanf(addr, "%d.%d.%d.%d", a, a+1, a+2, a+3);
+    taddr = ((_u32)a[0] & 0x000000FF);
+    taddr = (taddr << 8) + ((_u32)a[1] & 0x000000FF);
+    taddr = (taddr << 8) + ((_u32)a[2] & 0x000000FF);
+    taddr = (taddr << 8) + ((_u32)a[3] & 0x000000FF);
+    return taddr;
+```
 总之这个问题还是要提醒我们，时刻注意在使用堆栈的时候要小心，如果出现了访问越界或者是修改了不该修改的内存，那么可能会导致函数无法返回。这种情况下就会出现巧合的功能正确，但是却无法正常返回。
 
 ## 9.4 sprintf函数的问题
@@ -2316,34 +2246,30 @@ Assert宏定义在assert.h中，一个断言本质上是写下程序员的假设
 
 ## 9.5 使用typedef定义平台无关类型
 
-\#if defined(_NEED_SIZE_T_)
-
+```
+#if defined(_NEED_SIZE_T_)
 typedef long unsigned int size_t;
+#endif
 
-\#endif
-
- 
-
-\#ifdef __DJGPP__
-
+#ifdef __DJGPP__
 typedef long unsigned int size_t;
+#endif 
+```
 
-\#endif 
-
-以上为平台无关变量size_t的定义，这里使用了typedef来实现平台无关变量的定义。具体的原理是：不用对源代码做任何修改，便可以在每一种平台上编译这个使用 size_t类型的应用程序。唯一要改的是 typedef 本身。在大多数情况下，甚至这个微小的变动完全都可以通过奇妙的条件编译来自动实现。
+以上为平台无关变量size_t的定义，这里使用了typedef来实现平台无关变量的定义。具体的原理是：不用对源代码做任何修改，便可以在每一种平台上编译这个使用 size_t 类型的应用程序。唯一要改的是 typedef 本身。在大多数情况下，甚至这个微小的变动完全都可以通过奇妙的条件编译来自动实现。
 
 下面举例：
-
-typedef long double REAL; 
-
+```c
+typedef long double REAL;` 
+```
 在不支持 long double 的机器上，该 typedef 看起来会是下面这样： 
-
+```c
 typedef double REAL; 
-
+```
 并且，在连 double 都不支持的机器上，该 typedef 看起来会是这样： 
-
+```c
 typedef float REAL; 
-
+```
 这样的话在程序中就只使用REAL变量，在不同平台的时候，修改typedef来使REAL代表系统中最高的精度，可能是long double,也可能是double,还可能是float。根据具体的平台修改typedef，这样就不需要修改程序中大量使用的REAL本身了。 
 
 ## 9.5 break、continue在switch和循环中的不同
@@ -2362,6 +2288,7 @@ typedef float REAL;
 
 3.break和continue语句在循环内的switch语句中使用时，是有些区别的。Break是跳出本switch，switch后面的代码继续执行，而continue是不执行switch后的代码，可以理解为跳出循环，接着进入下一次循环。分别测试下面代码使用 break和continue两种情况的输出，如果使用continue，你会发现程序找到Microsoft后，document.write代码不执行了，输出的结果就比使用break少了一行。
 
+```
 Array('Adobe','Apple','Google','Intel','Microsoft','Oracle','IBM','SUN');
 for (var i in company)
 {
@@ -2373,35 +2300,37 @@ for (var i in company)
     }
     document.write('Me was run '+i);
 }
+```
 
 三、break和continue语句的使用场合
 1、break可以优化程序，不让程序多做些无用功。在下面的例子中，我们要从一个庞大的公司列表中找出Microsoft公司，一旦找到，就不会接着往下再找，比如下面语句用不用break是一样的效果，但用了break语句，程序运行的步骤就少了，除非要找的公司在最后面。我这里之所以强调“庞大”的列表，在于突显break优势，太少的话，也许你会认为自己用if语句就行。
-
-\#include <stdio.h>
+```c
+#include <stdio.h>
 void main()
 {
-int   flag=0;
-for(int   j=0;  j <2;   j++)
-{
-if(j==0)
-{
-switch(j)
-{
-case   0:   continue;       
+    int   flag=0;
+    for(int   j=0;  j <2;   j++)
+    {
+        if(j==0)
+        {
+            switch(j)
+            {
+                case   0:   continue;       
+            }
+            flag=1; //continue的时候这句不执行，直接下一次循环；而break的时候，这一句则要执行；
+        }
+    }
+         printf( "   flag:%d\n ",flag);
 }
-flag=1; //continue的时候这句不执行，直接下一次循环；而break的时候，这一句则要执行；
-}
-}
-printf( "   flag:%d\n ",flag);
-}
+```
 输出：
-  flag:0
+    flag:0
 如果代码为：
-  case   0:   break;
+    case   0:   break;
 输出：
-  flag:1
+    flag:1
 
-10 链表&状态机与多线程
+# 10 链表、状态机与多线程
 
 ## 10.1 链表的引入
 
