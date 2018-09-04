@@ -91,3 +91,7 @@ git submodule update --init --recursive
 ```sh
 git rm --cached hello
 ```
+
+## GIT与远程REPOSITORY同步TAG和BRANCH
+
+参考如下地址：http://smilejay.com/2013/04/git-sync-tag-and-branch-with-remote/
