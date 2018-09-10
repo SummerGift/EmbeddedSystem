@@ -1,5 +1,7 @@
 # Git  常用操作及技巧
 
+[GIT 命令大全](http://www.cnblogs.com/Small-music/p/9075681.html)
+
 ## Git 分支命令
 
 - 创建name的分支，并切换过去
