@@ -33,6 +33,10 @@
 ```sh
       git stash pop
 ```
+- 查看日志
+```
+      git log --graph
+```
 
 ## Git 撤销本地提交
 ```
