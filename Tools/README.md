@@ -34,3 +34,6 @@
 ## 流程图以及脑图
 - 流程图绘制软件：[Processon](https://www.processon.com/) 一款简单易用的免费在线作图，实时协作软件
 - 脑图绘制软甲: [MindMaster](http://www.edrawsoft.cn/mindmaster/) 拥有非常丰富的模板，制作出的脑图非常漂亮，目前推出了网页版和手机客户端，强烈推荐
+
+## 文件系统读取软件
+- 体积小巧功能强大的 img 镜像管理制作工具 : [WinImage](http://www.winimage.com/download.htm)，可以让你轻松读取文件系统镜像中的文件内容
