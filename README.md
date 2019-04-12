@@ -4,17 +4,16 @@
 
 # 主要内容
 
-原创文章：
+原创技术文章与学习感悟：
 
 - [Articles](Articles/)
 
 嵌入式系统基础相关内容：
 
-- [ARM](ARM/)
-- [MCU](MCU/)
-- [IoT](IoT/)
-- [Network](Network/)
-- [Tools](Tools/)
+- [ARM](Arm/)             ARM 架构
+- [MCU](MCU/)            嵌入式处理器
+- [Network](Network/)     网络与云端
+- [Tools](Tools/)           开发中常用到的高效工具
 
 主流编程语言相关内容：
 
