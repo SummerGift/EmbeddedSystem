@@ -2,29 +2,25 @@
 
 这个仓库用来对嵌入式系统的基础知识和主流编程语言相关内容进行总结，每个目录对应一个大的方向。
 
-
 # 主要内容
 
-主要包含的嵌入式系统基础有以下几个大方向：
+原创文章：
 
-* [MCU](MCU/)
-* [RTOS](RTOS/)
-* [Linux_OS](Linux_OS/)
-* [DataStructure](DataStructure/)
-* [Algorithm](Algorithm/)
-* [IoT](IoT/)
-* [Network](Network/)
-* [Tools](Tools/)
+- [Articles](Articles/)
 
-编程语言目前有：
+嵌入式系统基础相关内容：
 
-* [C](C/)
-* [C++](C++/)
-* [Python](Python/)
+- [ARM](ARM/)
+- [MCU](MCU/)
+- [IoT](IoT/)
+- [Network](Network/)
+- [Tools](Tools/)
 
-还有一些文件夹：
+主流编程语言相关内容：
 
-- [Others](Others/)  一些不好归类，但是有用的东西
+- [C](C/)
+- [C++](C++/)
+- [Python](Python/)
 
 # 说点什么
 
