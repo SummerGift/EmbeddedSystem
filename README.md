@@ -7,14 +7,18 @@
 原创文章：
 
 - [Articles](Articles/)
+  - 个人原创的技术文章与学习感悟
 
 嵌入式系统基础相关内容：
 
-- [ARM](ARM/)
+- [ARM](Arm/)
+  - ARM 架构
 - [MCU](MCU/)
-- [IoT](IoT/)
+  - 嵌入式处理器
 - [Network](Network/)
+  - 网络与云端
 - [Tools](Tools/)
+  - 开发中常用到的高效工具
 
 主流编程语言相关内容：
 
