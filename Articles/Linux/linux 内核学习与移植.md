@@ -196,3 +196,26 @@ b start_kernel 跳转到 C 语言运行阶段。
 
 - `__lookup_machine_typ`函数的工作原理：内核在建立的时候就把各种CPU架构的信息组织成一个一个的machine_desc结构体实例，然后都给一个段属性`.arch.info.init`，链接的时候会保证这些描述符会被连接在一起。`__lookup_machine_type`就去那个那些描述符所在处依次挨个遍历各个描述符，对比查看和哪个机器码相同
 
+#### 3.3.2 cmdline 的传递
+`setup_arch` 函数进行了基本的 cmdline 处理：
+
+- cmdline 就是指的 uboot 给 kernel 传参时传递的命令行启动参数，也就是 uboot 的 bootargs。
+
+有几个相关的变量需要注意：
+
+- default_command_line：看名字是默认的命令行参数，实际是一个全局变量字符数组，这个字符数组可以用来存东西
+
+- CONFIG_CMDLINE：在 `.config` 文件中定义的（可以在make menuconfig中去更改设置），这个表示内核的一个默认的命令行参数。
+
+- 内核对cmdline的处理思路
+内核中自己维护了一个默认的 cmdline（就是.config中配置的这一个），然后 uboot 还可以通过 tag 给 kernel 再传递一个 cmdline。如果 uboot 给内核传 cmdline 成功则内核会优先使用 uboot 传递的这一个；如果 uboot 没有给内核传 cmdline 或者传参失败，则内核会使用自己默认的这个cmdline。以上说的这个处理思路就是在 setup_arch 函数中实现的。
+
+实验验证内核的cmdline确定：
+
+1. 验证思路：首先给内核配置时配置一个基本的 cmdline，然后在uboot启动内核时给 uboot 设置一个 bootargs，然后启动内核看打印出来的 cmdline 和 uboot 传参时是否一样。
+
+2. 在uboot 中去掉 bootargs，然后再次启动内核看打印出来的 cmdline 是否和内核中设置的默认的 cmdline 一样。
+
+注意：uboot 给内核传递的 cmdline 非常重要，会影响内核的运行，所以要谨慎。有时候内核启动有问题，可以分析下是不是 uboot 的 bootargs 设置不对。
+
+注意：这个传参在这里确定出来之后，后面还会对这个传参进行解析。解析之后 cmdline 中的每一个设置项都会对内核启动有影响。
