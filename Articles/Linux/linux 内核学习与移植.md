@@ -219,3 +219,36 @@ b start_kernel 跳转到 C 语言运行阶段。
 注意：uboot 给内核传递的 cmdline 非常重要，会影响内核的运行，所以要谨慎。有时候内核启动有问题，可以分析下是不是 uboot 的 bootargs 设置不对。
 
 注意：这个传参在这里确定出来之后，后面还会对这个传参进行解析。解析之后 cmdline 中的每一个设置项都会对内核启动有影响。
+
+#### 3.3.3 cmdline 的解析
+
+- setup_command_line
+也是在处理和命令行参数cmdline有关的任务。
+
+- parse_early_param&parse_args
+解析 cmdline 传参和其他传参，这里的解析意思是把 cmdline 的细节设置信息给解析出来。譬如cmdline：`console=ttySAC2,115200 root=/dev/mmcblk0p2 rw init=/linuxrc rootfstype=ext3`，则解析出的内容就是就是一个字符串数组，数组中依次存放了一个设置项目信息。
+
+```
+console=ttySAC2,115200  
+root=/dev/mmcblk0p2 rw  
+init=/linuxrc  
+rootfstype=ext3
+```
+
+这里只是进行了解析，并没有去处理。也就是说只是把长字符串解析成了短字符串，最多和内核里控制这个相应功能的变量挂钩了，但是并没有去执行。执行的代码在各自模块初始化的代码部分。
+
+#### 3.3.3 start_kernel 中的其他函数
+- trap_init					设置异常向量表
+- mm_init				     内存管理模块初始化
+- sched_init			        内核调度系统初始化
+- early_irq_init&init_IRQ	       中断初始化
+- console_init				控制台初始化
+
+总结：start_kernel函数中调用了很多的xx_init函数，全都是内核工作需要的模块的初始化函数。这些初始化之后内核就具有了一个基本的可以工作的条件了。
+
+如果把内核比喻成一个复杂机器，那么 start_kernel 函数就是把这个机器的众多零部件组装在一起形成这个机器，让他具有可以工作的基本条件。
+
+- rest_init
+这个函数之前内核的基本组装已经完成，剩下的一些工作就比较重要了，放在了一个单独的函数中，叫 rest_init。
+
+总结：start_kernel函数做的主要工作：打印了一些信息、内核工作需要的模块的初始化被依次调用（譬如内存管理、调度系统、异常处理···）、需要重点了解的就是 setup_arch 中做的2件事情：机器码架构的查找并且执行架构相关的硬件的初始化、uboot 给内核的传参 cmdline。
