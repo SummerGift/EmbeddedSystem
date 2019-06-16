@@ -184,3 +184,15 @@ b start_kernel 跳转到 C 语言运行阶段。
 - 分析 uboot 给 kernel 传参的影响和实现
 - 硬件初始化与驱动加载
 - 内核启动后的结局
+
+#### 3.3.1 machine 查找代码分析
+- `setup_processor` 函数用来查找CPU信息，可以结合串口打印的信息来分析
+
+- `setup_machine` 函数的传参是机器码编号，`machine_arch_type` 符号在`include/generated/mach-types.h`的 32039-32050 行定义了。经过分析后确定这个传参值就是2456
+
+- 函数的作用是通过传入的机器码编号，找到对应这个机器码的machine_desc描述符，并且返回这个描述符的指针
+
+- 其实真正干活的函数是 `lookup_machine_type`，找这个函数发现在 head-common.S 中，真正干活的函数是`__lookup_machine_typ`
+
+- `__lookup_machine_typ`函数的工作原理：内核在建立的时候就把各种CPU架构的信息组织成一个一个的machine_desc结构体实例，然后都给一个段属性`.arch.info.init`，链接的时候会保证这些描述符会被连接在一起。`__lookup_machine_type`就去那个那些描述符所在处依次挨个遍历各个描述符，对比查看和哪个机器码相同
+
