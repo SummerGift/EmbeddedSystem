@@ -356,7 +356,87 @@ uboot 传参中的 `rootfstype=ext3` 这一句就是告诉内核 rootfs 的类�
 
 - 确定init程序在哪里的方法
 
-先从 uboo t传参 cmdline 中看有没有指定，如果有指定先执行 cmdline 中指定的程序。cmdline 中的 init=/linuxrc 这个就是指定 rootfs 中哪个程序是 init 程序。这里的指定方式就表示我们 rootfs 的根目录下面有个名字叫 linuxrc 的程序，这个程序就是 init 程序。
+先从 uboot 传参 cmdline 中看有没有指定，如果有指定先执行 cmdline 中指定的程序。cmdline 中的 init=/linuxrc 这个就是指定 rootfs 中哪个程序是 init 程序。这里的指定方式就表示我们 rootfs 的根目录下面有个名字叫 linuxrc 的程序，这个程序就是 init 程序。
 
 如果 uboot 传参 cmdline 中没有 init=xx 或者 cmdline 中指定的这个xx执行失败，还有备用方案。第一备用：/sbin/init，第二备用：/etc/init，第三备用：/bin/init，第四备用：/bin/sh。
 如果以上都不成功，则认为启动失败。
+
+#### 3.3.7 cmdline 常用参数
+
+- 格式简介
+(1)格式就是由很多个项目用空格隔开依次排列，每个项目中都是项目名=项目值
+(2)整个cmdline会被内核启动时解析，解析成一个一个的项目名=项目值的字符串。这些字符串又会被再次解析从而影响启动过程。
+
+- root=
+这个是用来指定根文件系统在哪里的，一般格式是 root=/dev/xxx（一般如果是 nandflash 上则 /dev/mtdblock2，如果是 inand/sd 的话则 /dev/mmcblk0p2），如果是 nfs 的 rootfs，则root=/dev/nfs。
+
+- rootfstype=
+(1)根文件系统的文件系统类型，一般是jffs2、yaffs2、ext3、ubi
+
+- console=
+控制台信息声明，譬如 `console=/dev/ttySAC0,115200` 表示控制台使用串口0，波特率是115200。
+正常情况下，内核启动的时候会根据 console= 这个项目来初始化硬件，并且重定位 console 到具体的一个串口上，所以这里的传参会影响后续是否能从串口终端上接收到内核的信息。
+
+- mem=
+(1)mem=用来告诉内核当前系统的内存有多少
+
+- init=
+(1)init=用来指定进程1的程序pathname，一般都是init=/linuxrc
+
+- 常见 cmdline
+
+`console=ttySAC2,115200 root=/dev/mmcblk0p2 rw init=/linuxrc rootfstype=ext3`
+
+第一种这种方式对应rootfs在SD/iNand/Nand/Nor等物理存储器上。这种对应产品正式出货工作时的情况。
+
+`root=/dev/nfs nfsroot=192.168.1.141:/root/s3c2440/build_rootfs/aston_rootfs ip=192.168.1.10:192.168.1.141:192.168.1.1:255.255.255.0::eth0:off  init=/linuxrc console=ttySAC0,115200` 
+
+第二种这种方式对应 rootfs 在 nfs 上，这种在我们做调试的时候经常使用。
+
+#### 3.3.8 内核中架构相关代码分析
+
+内核代码基本分为3块
+
+- arch		
+本目录下全是cpu架构有关的代码
+
+- drivers		
+本目录下全是硬件的驱动
+
+- 其他目录下的代码           
+这些代码都和硬件无关，因此系统移植和驱动开发的时候这些代码几乎都是不用关注和修改的。
+
+架构相关的常用目录名及含义：
+
+- mach（ mach 就是 machine architecture）
+arch/arm 目录下的一个 mach-xx 目录就表示一类 machine 的定义，这类 machine 的共同点是都用某一种 cpu 来做主芯片。（譬如 mach-s5pv210 这个文件夹里面都是 s5pv210 这个主芯片的开发板machine）。mach-xx 目录里面的一个 mach-yy.c 文件中定义了一个开发板（一个开发板对应一个机器码），这个是可以被扩展的。
+
+- plat（plat 是 platform 的缩写，含义是平台）
+plat在这里可以理解为 SoC，也就是说这个 plat 目录下都是 SoC 里面的一些硬件（内部外设）相关的一些代码。在内核中把 SoC 内部外设相关的硬件操作代码就叫做平台设备驱动。
+
+另外 plat 文件夹中存放的是片上外设的一些配置数据，这体现了数据和驱动分离的思想。
+
+- include
+include 目录中的所有代码都是架构相关的头文件，linux 内核通用的头文件在内核源码树根目录下的 include 目录里。
+
+头文件目录 include 有好几个，譬如：
+
+```
+    kernel/include		        内核通用头文件
+    kernel/arch/arm/include		架构相关的头文件
+        kernel/arch/arm/include/asm
+            kernel\arch\arm\include\asm\mach
+    kernel\arch\arm\mach-s5pv210\include\mach
+    kernel\arch\arm\plat-s5p\include\plat
+```
+
+内核中包含头文件时有一些格式：
+
+```
+#include <linux/kernel.h>		kernel/include/linux/kernel.h
+#include <asm/mach/arch.h>		kernel/arch/arm/include/asm/mach/arch.h
+#include <asm/setup.h>			kernel\arch\arm\include\asm/setup.h
+#include <plat/s5pv210.h>		kernel\arch\arm\plat-s5p\include\plat/s5pv210.h
+```
+
+有些同名的头文件是有包含关系的，有时候我们需要包含某个头文件时可能并不是直接包含他，而是包含一个包含了他的头文件。
