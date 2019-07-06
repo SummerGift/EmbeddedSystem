@@ -14,6 +14,7 @@
 - [MCU](MCU/)            嵌入式处理器
 - [Network](Network/)     网络与云端
 - [Tools](Tools/)           开发中常用到的高效工具
+- [Linux](Linux/)           嵌入式 Linux
 
 主流编程语言相关内容：
 
