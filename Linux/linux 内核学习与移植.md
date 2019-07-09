@@ -78,8 +78,8 @@
 
 ### 1.7 如何选择合适的内核版本
 
-- 并不是越新版本你的内核越好
-- 选择 soc 厂家一直的版本会减少工作量
+- 并不是越新版本的内核越好
+- 选择 SOC 厂家一直的版本会减少工作量
 
 ### 1.8 S5PV210 适用的内核版本
 
@@ -93,7 +93,7 @@
 公共的头文件和架构相关的头文件分开存放，架构相关的在 arch/arm/include 文件夹中，公共的头文件存放在 includes 文件夹中。
 
 - lib
-在linux内核编程中是不能用 c 语言标准库函数的，这里面的函数就是供内核调用的库函数。比如在内核中打印时，要用 printk，而不能用 printf，因为 lib 文件夹中没有 printf。
+在 linux 内核编程中是不能用 c 语言标准库函数的，这里面的函数就是供内核调用的库函数。比如在内核中打印时，要用 printk，而不能用 printf，因为 lib 文件夹中没有 printf。
 
 - mm 
 内存管理
@@ -126,9 +126,9 @@ kernel的连接脚本并不是直接提供的，而是提供了一个汇编文�
 
 把有相同属性的代码放在一个段中，在链接的时候将他们链接到输出文件的指定位置。可以找到该段的起始地址和结束地址，中间的内容就是存放的该段的代码。
 
-内核的起始部分代码是被解压代码调用的。uboot启动内核后实际调用运行的是zImage前面那一段未经压缩的解压代码，解压代码运行时先将 zImage 后段的内核解压开，然后再去调用运行真正的内核入口。
+内核的起始部分代码是被解压代码调用的。uboot 启动内核后实际调用运行的是 zImage 前面那一段未经压缩的解压代码，解压代码运行时先将 zImage 后段的内核解压开，然后再去调用运行真正的内核入口。
 
-zImage 是压缩后的linux镜像。
+zImage 是压缩后的 linux 镜像。
 
 内核启动的条件：
 
@@ -150,14 +150,14 @@ uboot 最后执行的函数 theKernel 做的事情就是将这三个值放在相
 - `__lookup_machine_type`
 
 - `__vet_atags`
-检验uboot给内核的传参 ATAGS格式是否正确，这里的传参指的是uboot通过 tag 给内核穿的参数。主要是板子的内存分布 memtag、uboot 的 bootargs。
+检验 uboot 给内核的传参 ATAGS格式是否正确，这里的传参指的是uboot通过 tag 给内核穿的参数。主要是板子的内存分布 memtag、uboot 的 bootargs。
 
 如果 uboot 给内核传参的部分不对，内核是不会启动的。
 
 #### 3.2.2 建立页表
 
 - `__create_page_tables`
-创建页表，因为linux内核被链接在虚拟地址处，因此内核希望尽快建立页表，开启 MMU。
+创建页表，因为 linux 内核被链接在虚拟地址处，因此内核希望尽快建立页表，开启 MMU。
 
 #### 3.2.3 构建 C 语言运行环境
 
@@ -188,33 +188,42 @@ b start_kernel 跳转到 C 语言运行阶段。
 #### 3.3.1 machine 查找代码分析
 - `setup_processor` 函数用来查找CPU信息，可以结合串口打印的信息来分析
 
-- `setup_machine` 函数的传参是机器码编号，`machine_arch_type` 符号在`include/generated/mach-types.h`的 32039-32050 行定义了。经过分析后确定这个传参值就是2456
+- `setup_machine` 函数的传参是机器码编号，`machine_arch_type` 符号在`include/generated/mach-types.h`的 32039-32050 行定义了。经过分析后确定这个传参值就是 2456
 
-- 函数的作用是通过传入的机器码编号，找到对应这个机器码的machine_desc描述符，并且返回这个描述符的指针
+- 函数的作用是通过传入的机器码编号，找到对应这个机器码的 machine_desc 描述符，并且返回这个描述符的指针
 
 - 其实真正干活的函数是 `lookup_machine_type`，找这个函数发现在 head-common.S 中，真正干活的函数是`__lookup_machine_typ`
 
-- `__lookup_machine_typ`函数的工作原理：内核在建立的时候就把各种CPU架构的信息组织成一个一个的machine_desc结构体实例，然后都给一个段属性`.arch.info.init`，链接的时候会保证这些描述符会被连接在一起。`__lookup_machine_type`就去那个那些描述符所在处依次挨个遍历各个描述符，对比查看和哪个机器码相同
+- `__lookup_machine_typ`函数的工作原理：内核在建立的时候就把各种CPU架构的信息组织成一个一个的machine_desc 结构体实例，然后都给一个段属性`.arch.info.init`，链接的时候会保证这些描述符会被连接在一起。`__lookup_machine_type`就去那个那些描述符所在处依次挨个遍历各个描述符，对比查看和哪个机器码相同
 
 #### 3.3.2 cmdline 的传递
 `setup_arch` 函数进行了基本的 cmdline 处理：
 
-- cmdline 就是指的 uboot 给 kernel 传参时传递的命令行启动参数，也就是 uboot 的 bootargs。
+- cmdline
+
+指的 uboot 给 kernel 传参时传递的命令行启动参数，也就是 uboot 的 bootargs。
 
 有几个相关的变量需要注意：
 
-- default_command_line：看名字是默认的命令行参数，实际是一个全局变量字符数组，这个字符数组可以用来存东西
+- default_command_line
 
-- CONFIG_CMDLINE：在 `.config` 文件中定义的（可以在make menuconfig中去更改设置），这个表示内核的一个默认的命令行参数。
+看名字是默认的命令行参数，实际是一个全局变量字符数组，这个字符数组可以用来存东西
+
+- CONFIG_CMDLINE
+
+在 `.config` 文件中定义的（可以在 make menuconfig 中去更改设置），这个表示内核的一个默认的命令行参数。
 
 - 内核对cmdline的处理思路
-内核中自己维护了一个默认的 cmdline（就是.config中配置的这一个），然后 uboot 还可以通过 tag 给 kernel 再传递一个 cmdline。如果 uboot 给内核传 cmdline 成功则内核会优先使用 uboot 传递的这一个；如果 uboot 没有给内核传 cmdline 或者传参失败，则内核会使用自己默认的这个cmdline。以上说的这个处理思路就是在 setup_arch 函数中实现的。
 
-实验验证内核的cmdline确定：
+内核中自己维护了一个默认的 cmdline（就是.config中配置的这一个），然后 uboot 还可以通过 tag 给 kernel 再传递一个 cmdline。如果 uboot 给内核传 cmdline 成功则内核会优先使用 uboot 传递的这一个。
 
-1. 验证思路：首先给内核配置时配置一个基本的 cmdline，然后在uboot启动内核时给 uboot 设置一个 bootargs，然后启动内核看打印出来的 cmdline 和 uboot 传参时是否一样。
+如果 uboot 没有给内核传 cmdline 或者传参失败，则内核会使用自己默认的这个 cmdline。以上说的这个处理思路就是在 setup_arch 函数中实现的。
 
-2. 在uboot 中去掉 bootargs，然后再次启动内核看打印出来的 cmdline 是否和内核中设置的默认的 cmdline 一样。
+实验验证内核的 cmdline 确定：
+
+1. 验证思路：首先给内核配置时配置一个基本的 cmdline，然后在 uboot 启动内核时给 uboot 设置一个 bootargs，然后启动内核看打印出来的 cmdline 和 uboot 传参时是否一样。
+
+2. 在 uboot 中去掉 bootargs，然后再次启动内核看打印出来的 cmdline 是否和内核中设置的默认的 cmdline 一样。
 
 注意：uboot 给内核传递的 cmdline 非常重要，会影响内核的运行，所以要谨慎。有时候内核启动有问题，可以分析下是不是 uboot 的 bootargs 设置不对。
 
@@ -223,9 +232,11 @@ b start_kernel 跳转到 C 语言运行阶段。
 #### 3.3.3 cmdline 的解析
 
 - setup_command_line
+
 也是在处理和命令行参数cmdline有关的任务。
 
 - parse_early_param&parse_args
+
 解析 cmdline 传参和其他传参，这里的解析意思是把 cmdline 的细节设置信息给解析出来。譬如cmdline：`console=ttySAC2,115200 root=/dev/mmcblk0p2 rw init=/linuxrc rootfstype=ext3`，则解析出的内容就是就是一个字符串数组，数组中依次存放了一个设置项目信息。
 
 ```
@@ -238,20 +249,22 @@ rootfstype=ext3
 这里只是进行了解析，并没有去处理。也就是说只是把长字符串解析成了短字符串，最多和内核里控制这个相应功能的变量挂钩了，但是并没有去执行。执行的代码在各自模块初始化的代码部分。
 
 #### 3.3.4 start_kernel 中的其他函数
+
 - trap_init					设置异常向量表
 - mm_init				     内存管理模块初始化
 - sched_init			        内核调度系统初始化
 - early_irq_init&init_IRQ	       中断初始化
 - console_init				控制台初始化
 
-总结：start_kernel函数中调用了很多的xx_init函数，全都是内核工作需要的模块的初始化函数。这些初始化之后内核就具有了一个基本的可以工作的条件了。
+总结：start_kernel 函数中调用了很多的 xx_init 函数，全都是内核工作需要的模块的初始化函数。这些初始化之后内核就具有了一个基本的可以工作的条件了。
 
 如果把内核比喻成一个复杂机器，那么 start_kernel 函数就是把这个机器的众多零部件组装在一起形成这个机器，让他具有可以工作的基本条件。
 
 - rest_init
+
 这个函数之前内核的基本组装已经完成，剩下的一些工作就比较重要了，放在了一个单独的函数中，叫 rest_init。
 
-总结：start_kernel函数做的主要工作：打印了一些信息、内核工作需要的模块的初始化被依次调用（譬如内存管理、调度系统、异常处理···）、需要重点了解的就是 setup_arch 中做的2件事情：机器码架构的查找并且执行架构相关的硬件的初始化、uboot 给内核的传参 cmdline。
+总结：start_kernel 函数做的主要工作：打印了一些信息、内核工作需要的模块的初始化被依次调用（譬如内存管理、调度系统、异常处理···）、需要重点了解的就是 setup_arch 中做的2件事情：机器码架构的查找并且执行架构相关的硬件的初始化、uboot 给内核的传参 cmdline。
 
 #### 3.3.5 内核启动后的稳定态
 
@@ -259,11 +272,11 @@ rootfstype=ext3
 
 - rest_init 中调用 kernel_thread 函数启动了2个内核线程，分别是：kernel_init 和 kthreadd
 
-- 调用schedule函数开启了内核的调度系统，从此linux系统开始转起来了。
+- 调用 schedule 函数开启了内核的调度系统，从此linux系统开始转起来了。
 
 - rest_init 最终调用 cpu_idle 函数结束了整个内核的启动过程。也就是说 linux 内核最终结束于函数 cpu_idle，这个函数是一个死循环。
 
-- 简单来说，linux内核最终的状态是：有事干的时候去执行有意义的工作（执行各个进程任务），实在没活干的时候就去执行 IDLE 死循环。
+- 简单来说，linux 内核最终的状态是：有事干的时候去执行有意义的工作（执行各个进程任务），实在没活干的时候就去执行 IDLE 死循环。
 
 - 之前已经启动了内核调度系统，调度系统会负责考评系统中所有的进程，这些进程里面只有有哪个需要被运行，调度系统就会终止 cpu_idle 死循环进程（空闲进程）转而去执行有意义的干活的进程。这样操作系统就转起来了。
 
@@ -271,7 +284,7 @@ rootfstype=ext3
 
 - 进程和线程。简单来理解，一个运行的程序就是一个进程。所以进程就是任务、进程就是一个独立的程序。独立的意思就是这个程序和别的程序是分开的，这个程序可以被内核单独调用执行或者暂停。
 
-- 在linux系统中，线程和进程非常相似，几乎可以看成是一样的。实际上我们当前讲课用到的进程和线程的概念就是一样的。
+- 在 linux 系统中，线程和进程非常相似，几乎可以看成是一样的。实际上我们当前讲课用到的进程和线程的概念就是一样的。
 
 - 进程/线程就是一个独立的程序。应用层运行一个程序就构成一个用户进程/线程，那么内核中运行一个函数（函数其实就是一个程序）就构成了一个内核进程/线程。
 
@@ -314,11 +327,11 @@ init 进程大部分有意义的工作都是在用户态下进行的。init 进�
 
 init 进程在内核态下面时，通过一个函数 kernel_execve 来执行一个用户空间编译连接的应用程序就跳跃到用户态了。注意这个跳跃过程中进程号是没有改变的，所以一直是进程 1。这个跳跃过程是单向的，也就是说一旦执行了 ini t程序转到了用户态下整个操作系统就算真正的运转起来了，以后只能在用户态下工作了，用户态下想要进入内核态只有走 API 这一条路了。
 
-- init进程构建了用户交互界面
+- init 进程构建了用户交互界面
 
 init 进程是其他用户进程的老祖宗。linux 系统中一个进程的创建是通过其父进程创建出来的。根据这个理论只要有一个父进程就能生出一堆子孙进程了。
 
-init 启动了 login 进程、命令行进程、shell 进程
+init 启动了 login 进程、命令行进程、shell 进程。
 
 shell 进程启动了其他用户进程，命令行和 shell 一旦工作了，用户就可以在命令行下通过 ./xx 的方式来执行其他应用程序，每一个应用程序的运行就是一个进程。
 
@@ -344,11 +357,11 @@ uboot 传参中的 `rootfstype=ext3` 这一句就是告诉内核 rootfs 的类�
 
 如果内核启动时挂载 rootfs 失败，则后面肯定没法执行了，肯定会死。内核中设置了启动失败休息 5s 自动重启的机制，因此这里会自动重启，所以有时候会有反复重启的情况。
 
-如果挂载rootfs失败，可能的原因有：
+如果挂载 rootfs 失败，可能的原因有：
 
-1. 最常见的错误就是uboot的bootargs设置不对。
-2. rootfs烧录失败（fastboot烧录不容易出错，以前是手工烧录很容易出错）
-3. rootfs本身制作失败的。（尤其是自己做的rootfs，或者别人给的第一次用）
+1. 最常见的错误就是 uboot 的 bootargs 设置不对。
+2. rootfs 烧录失败（fastboot 烧录不容易出错，以前是手工烧录很容易出错）
+3. rootfs 本身制作失败的。（尤其是自己做的 rootfs，或者别人给的第一次用）
 
 - 执行用户态下的进程1程序
 
@@ -364,30 +377,38 @@ uboot 传参中的 `rootfstype=ext3` 这一句就是告诉内核 rootfs 的类�
 #### 3.3.7 cmdline 常用参数
 
 - 格式简介
-(1)格式就是由很多个项目用空格隔开依次排列，每个项目中都是项目名=项目值
-(2)整个cmdline会被内核启动时解析，解析成一个一个的项目名=项目值的字符串。这些字符串又会被再次解析从而影响启动过程。
+
+格式就是由很多个项目用空格隔开依次排列，每个项目中都是项目名=项目值。
+
+整个 cmdline 会被内核启动时解析，解析成一个一个的项目名=项目值的字符串。这些字符串又会被再次解析从而影响启动过程。
 
 - root=
-这个是用来指定根文件系统在哪里的，一般格式是 root=/dev/xxx（一般如果是 nandflash 上则 /dev/mtdblock2，如果是 inand/sd 的话则 /dev/mmcblk0p2），如果是 nfs 的 rootfs，则root=/dev/nfs。
+
+这个是用来指定根文件系统在哪里的，一般格式是 `root=/dev/xxx`（一般如果是 nandflash 上则 `/dev/mtdblock2`，如果是 inand/sd 的话则 `/dev/mmcblk0p2`），如果是 nfs 的 rootfs，则 `root=/dev/nfs`。
 
 - rootfstype=
-(1)根文件系统的文件系统类型，一般是jffs2、yaffs2、ext3、ubi
+
+根文件系统的文件系统类型，一般是jffs2、yaffs2、ext3、ubi。
 
 - console=
-控制台信息声明，譬如 `console=/dev/ttySAC0,115200` 表示控制台使用串口0，波特率是115200。
+
+控制台信息声明，譬如 `console=/dev/ttySAC0,115200` 表示控制台使用串口 0，波特率是115200。
+
 正常情况下，内核启动的时候会根据 console= 这个项目来初始化硬件，并且重定位 console 到具体的一个串口上，所以这里的传参会影响后续是否能从串口终端上接收到内核的信息。
 
 - mem=
-(1)mem=用来告诉内核当前系统的内存有多少
+
+mem= 用来告诉内核当前系统的内存有多少。
 
 - init=
-(1)init=用来指定进程1的程序pathname，一般都是init=/linuxrc
+
+init= 用来指定进程 1 的程序 pathname，一般都是 init=/linuxrc。
 
 - 常见 cmdline
 
 `console=ttySAC2,115200 root=/dev/mmcblk0p2 rw init=/linuxrc rootfstype=ext3`
 
-第一种这种方式对应rootfs在SD/iNand/Nand/Nor等物理存储器上。这种对应产品正式出货工作时的情况。
+第一种这种方式对应 rootfs 在 SD/iNand/Nand/Nor 等物理存储器上。这种对应产品正式出货工作时的情况。
 
 `root=/dev/nfs nfsroot=192.168.1.141:/root/s3c2440/build_rootfs/aston_rootfs ip=192.168.1.10:192.168.1.141:192.168.1.1:255.255.255.0::eth0:off  init=/linuxrc console=ttySAC0,115200` 
 
@@ -397,26 +418,32 @@ uboot 传参中的 `rootfstype=ext3` 这一句就是告诉内核 rootfs 的类�
 
 内核代码基本分为3块
 
-- arch		
+- arch
+
 本目录下全是cpu架构有关的代码
 
-- drivers		
+- drivers
+
 本目录下全是硬件的驱动
 
-- 其他目录下的代码           
+- 其他目录下的代码
+
 这些代码都和硬件无关，因此系统移植和驱动开发的时候这些代码几乎都是不用关注和修改的。
 
 架构相关的常用目录名及含义：
 
 - mach（ mach 就是 machine architecture）
+
 arch/arm 目录下的一个 mach-xx 目录就表示一类 machine 的定义，这类 machine 的共同点是都用某一种 cpu 来做主芯片。（譬如 mach-s5pv210 这个文件夹里面都是 s5pv210 这个主芯片的开发板machine）。mach-xx 目录里面的一个 mach-yy.c 文件中定义了一个开发板（一个开发板对应一个机器码），这个是可以被扩展的。
 
 - plat（plat 是 platform 的缩写，含义是平台）
+
 plat在这里可以理解为 SoC，也就是说这个 plat 目录下都是 SoC 里面的一些硬件（内部外设）相关的一些代码。在内核中把 SoC 内部外设相关的硬件操作代码就叫做平台设备驱动。
 
 另外 plat 文件夹中存放的是片上外设的一些配置数据，这体现了数据和驱动分离的思想。
 
 - include
+
 include 目录中的所有代码都是架构相关的头文件，linux 内核通用的头文件在内核源码树根目录下的 include 目录里。
 
 头文件目录 include 有好几个，譬如：
@@ -443,8 +470,8 @@ include 目录中的所有代码都是架构相关的头文件，linux 内核通
 
 ### 3.4 内核移植过程
 ```
-ARCH		    =  arm
-CROSS_COMPILE	= /usr/local/arm/arm-2009q3/bin/arm-none-linux-gnueabi-
+ARCH            = arm
+CROSS_COMPILE   = /usr/local/arm/arm-2009q3/bin/arm-none-linux-gnueabi-
 ```
 
 - 确定内核的解压缩后的地址和链接地址
@@ -460,7 +487,7 @@ CROSS_COMPILE	= /usr/local/arm/arm-2009q3/bin/arm-none-linux-gnueabi-
 
 链接地址和他对应的物理地址在 head.S 中可以查到，分别是 0xC0008000 和 0x30008000。那么自解压代码配置的解压地址应该是 30008000。
 
-自解压代码对应的自解压地址在mach/Makefile.boot文件中。在其中修改，加入两行：
+自解压代码对应的自解压地址在 `mach/Makefile.boot` 文件中。在其中修改，加入两行：
 ```
 # override for SMDKV210
 zreladdr-$(CONFIG_MACH_SMDKV210)	:= 0x30008000
