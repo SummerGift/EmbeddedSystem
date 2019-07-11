@@ -215,3 +215,41 @@ MODULE_AUTHOR("SummerGift");				// 描述模块的作者
 MODULE_DESCRIPTION("module test");	// 描述模块的介绍信息
 MODULE_ALIAS("alias xxx");			// 描述模块的别名信息
 ```
+### 3.2 应用程序调用驱动
+
+- 创建驱动设备文件
+
+何为设备文件：设备文件的关键信息是：设备号 = 主设备号 + 次设备号，使用 `ls -l` 去查看设备文件，就可以得到这个设备文件对应的主次设备号。
+
+使用 `mknod` 创建设备文件：`mknod /dev/xxx c 主设备号 次设备号`
+
+- 编写应用来测试驱动
+
+```
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+#define FILE    "/dev/test"         // 刚才mknod创建的设备文件名
+
+int main(void)
+{
+    int fd = -1;
+
+    fd = open(FILE, O_RDWR);
+    if (fd < 0)
+    {
+        printf("open %s error.\n", FILE);
+        return -1;
+    }
+    printf("open %s success..\n", FILE);
+
+    // 读写文件
+
+    // 关闭文件
+    close(fd);
+    
+    return 0;
+}
+```
