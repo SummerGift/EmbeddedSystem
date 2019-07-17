@@ -1091,7 +1091,7 @@ MODULE_ALIAS("alias xxx");			// 描述模块的别名信息
 
 - 得到分配的主设备号和次设备号
 
-使用 MAJOR 宏和 MINOR 宏从 dev_t 得到 major 和 minor，反过来使用MKDEV宏从major和minor得到dev_t，使用这些宏的代码具有可移植性。
+使用 MAJOR 宏和 MINOR 宏从 dev_t 得到 major 和 minor，反过来使用 MKDEV 宏从 major 和 minor 得到dev_t，使用这些宏的代码具有可移植性。
 
 - 中途出错的倒影式错误处理方法
 
@@ -1104,28 +1104,28 @@ MODULE_ALIAS("alias xxx");			// 描述模块的别名信息
 - 代码实践
 
 ```c
-#include <linux/module.h>		// module_init  module_exit
-#include <linux/init.h>			// __init   __exit
+#include <linux/module.h>       // module_init  module_exit
+#include <linux/init.h>         // __init   __exit
 #include <linux/fs.h>
 #include <asm/uaccess.h>
 #include <mach/regs-gpio.h>
-#include <mach/gpio-bank.h>		// arch/arm/mach-s5pv210/include/mach/gpio-bank.h
+#include <mach/gpio-bank.h>     // arch/arm/mach-s5pv210/include/mach/gpio-bank.h
 #include <linux/string.h>
 #include <linux/io.h>
 #include <linux/ioport.h>
 #include <linux/cdev.h>
 
-#define MYCNT		1
-#define MYNAME		"testchar"
+#define MYCNT       1
+#define MYNAME      "testchar"
 
-#define GPJ0CON		S5PV210_GPJ0CON
-#define GPJ0DAT		S5PV210_GPJ0DAT
+#define GPJ0CON     S5PV210_GPJ0CON
+#define GPJ0DAT     S5PV210_GPJ0DAT
 
-#define rGPJ0CON	*((volatile unsigned int *)GPJ0CON)
-#define rGPJ0DAT	*((volatile unsigned int *)GPJ0DAT)
+#define rGPJ0CON    *((volatile unsigned int *)GPJ0CON)
+#define rGPJ0DAT    *((volatile unsigned int *)GPJ0DAT)
 
-#define GPJ0CON_PA	0xe0200240
-#define GPJ0DAT_PA 	0xe0200244
+#define GPJ0CON_PA  0xe0200240
+#define GPJ0DAT_PA  0xe0200244
 
 unsigned int *pGPJ0CON;
 unsigned int *pGPJ0DAT;
@@ -1134,7 +1134,7 @@ unsigned int *pGPJ0DAT;
 static dev_t mydev;
 static struct cdev test_cdev;
 
-char kbuf[100];			// 内核空间的buf
+char kbuf[100];         // 内核空间的buf
 
 
 static int test_chrdev_open(struct inode *inode, struct file *file)
@@ -1144,7 +1144,7 @@ static int test_chrdev_open(struct inode *inode, struct file *file)
     printk(KERN_INFO "test_chrdev_open\n");
     
     rGPJ0CON = 0x11111111;
-    rGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));		// 亮
+    rGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));      // 亮
     
     return 0;
 }
@@ -1183,7 +1183,7 @@ static ssize_t test_chrdev_write(struct file *file, const char __user *ubuf,
     printk(KERN_INFO "test_chrdev_write\n");
 
     // 使用该函数将应用层传过来的ubuf中的内容拷贝到驱动空间中的一个buf中
-    // memcpy(kbuf, ubuf);		// 不行，因为2个不在一个地址空间中
+    // memcpy(kbuf, ubuf);      // 不行，因为2个不在一个地址空间中
     memset(kbuf, 0, sizeof(kbuf));
     ret = copy_from_user(kbuf, ubuf, count);
     if (ret)
@@ -1207,17 +1207,17 @@ static ssize_t test_chrdev_write(struct file *file, const char __user *ubuf,
 
 // 自定义一个file_operations结构体变量，并且去填充
 static const struct file_operations test_fops = {
-    .owner		= THIS_MODULE,				// 惯例，直接写即可
+    .owner      = THIS_MODULE,              // 惯例，直接写即可
     
-    .open		= test_chrdev_open,			// 将来应用open打开这个设备时实际调用的
-    .release	= test_chrdev_release,		// 就是这个.open对应的函数
-    .write 		= test_chrdev_write,
-    .read		= test_chrdev_read,
+    .open       = test_chrdev_open,         // 将来应用open打开这个设备时实际调用的
+    .release    = test_chrdev_release,      // 就是这个.open对应的函数
+    .write      = test_chrdev_write,
+    .read       = test_chrdev_read,
 };
 
 // 模块安装函数
 static int __init chrdev_init(void)
-{	
+{   
     int retval;
     
     printk(KERN_INFO "chrdev_init helloworld init\n");
@@ -1250,16 +1250,16 @@ static int __init chrdev_init(void)
 
     if (!request_mem_region(GPJ0DAT_PA, 4, "GPJ0CON"))
         goto flag3;
-    
+
     pGPJ0CON = ioremap(GPJ0CON_PA, 4);
     pGPJ0DAT = ioremap(GPJ0DAT_PA, 4);
-    
+
     *pGPJ0CON = 0x11111111;
-    *pGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));		// 亮
-    
+    *pGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));     // 亮
+
     return 0;
-    
-// 如果第4步才出错跳转到这里来	
+
+// 如果第4步才出错跳转到这里来   
 flag4:
     release_mem_region(GPJ0CON_PA, 4);
     release_mem_region(GPJ0DAT_PA, 4);
@@ -1273,7 +1273,7 @@ flag2:
 // 在这里把第1步做成功的东西给注销掉
     unregister_chrdev_region(mydev, MYCNT);
 // 如果第1步才出错跳转到这里来
-flag1:	
+flag1:  
     return -EINVAL;
 }
 
@@ -1282,18 +1282,18 @@ static void __exit chrdev_exit(void)
 {
     printk(KERN_INFO "chrdev_exit helloworld exit\n");
 
-    *pGPJ0DAT = ((1<<3) | (1<<4) | (1<<5));	
-    
+    *pGPJ0DAT = ((1<<3) | (1<<4) | (1<<5)); 
+
     // 解除映射
     iounmap(pGPJ0CON);
     iounmap(pGPJ0DAT);
     release_mem_region(GPJ0CON_PA, 4);
     release_mem_region(GPJ0DAT_PA, 4);
 
-/*	
+/*  
     // 在module_exit宏调用的函数中去注销字符设备驱动
     unregister_chrdev(mymajor, MYNAME);
-*/	
+*/  
 
     // 使用新的接口来注销字符设备驱动
     // 注销分2步：
@@ -1307,9 +1307,9 @@ module_init(chrdev_init);
 module_exit(chrdev_exit);
 
 // MODULE_xxx这种宏作用是用来添加模块描述信息
-MODULE_LICENSE("GPL");				// 描述模块的许可证
-MODULE_AUTHOR("SummerGift");		// 描述模块的作者
-MODULE_DESCRIPTION("module test");	// 描述模块的介绍信息
-MODULE_ALIAS("alias xxx");			// 描述模块的别名信息
+MODULE_LICENSE("GPL");              // 描述模块的许可证
+MODULE_AUTHOR("SummerGift");        // 描述模块的作者
+MODULE_DESCRIPTION("module test");  // 描述模块的介绍信息
+MODULE_ALIAS("alias xxx");          // 描述模块的别名信息
 ```
 
