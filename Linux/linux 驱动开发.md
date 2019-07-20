@@ -117,7 +117,7 @@ printk 相比 printf 来说还多了个**打印级别的设置**。printk 的打
 
 ubuntu 中这个 printk 的打印级别控制没法实践，ubuntu 中不管你把级别怎么设置都不能直接打印出来，必须 dmesg 命令去查看。
 
-### 2.4 关于驱动模块中的头文件
+### 2.4 驱动模块中的头文件
 
 驱动源代码中包含的头文件和原来应用编程程序中包含的头文件不是一回事。应用编程中包含的头文件是应用层的头文件，是应用程序的编译器带来的（譬如 gcc 的头文件路径在 `/usr/include` 下，这些东西是和操作系统无关的）。驱动源码属于内核源码的一部分，驱动源码中的头文件其实就是内核源代码目录下的 `include` 目录下的头文件。
 
@@ -458,7 +458,7 @@ MODULE_ALIAS("alias xxx");          // 描述模块的别名信息
 - 不同SoC的静态映射表位置、文件名可能不同
 - 所谓映射表其实就是头文件中的宏定义
 
-#### 3.5.2 内核中的静态映射表
+#### 3.5.2 内核静态映射表
 
 主映射表位于：`arch/arm/plat-s5p/include/plat/map-s5p.h`。
 
@@ -1311,5 +1311,684 @@ MODULE_LICENSE("GPL");              // 描述模块的许可证
 MODULE_AUTHOR("SummerGift");        // 描述模块的作者
 MODULE_DESCRIPTION("module test");  // 描述模块的介绍信息
 MODULE_ALIAS("alias xxx");          // 描述模块的别名信息
+```
+
+### 4.3 自动创建设备文件
+
+在先前的测试中，都需要手动创建字符设备文件，这样有些麻烦，其实可以编写代码来自动创建字符设备文件。当卸载驱动模块的时候，自动删除字符设备文件。
+
+解决方案是 udev（嵌入式中用的是 mdev），他是应用层的一个应用程序，内核驱动和应用层 udev 之间有一套信息传输机制（netlink协议），应用层启用 udev，内核驱动中使用相应接口。
+
+驱动注册和注销时信息会被传给 udev，由 udev 在应用层进行设备文件的创建和删除。
+
+内核驱动设备类相关函数：class_create、device_create。
+
+- 代码实战
+
+```c
+#include <linux/module.h>		// module_init  module_exit
+#include <linux/init.h>			// __init   __exit
+#include <linux/fs.h>
+#include <asm/uaccess.h>
+#include <mach/regs-gpio.h>
+#include <mach/gpio-bank.h>		// arch/arm/mach-s5pv210/include/mach/gpio-bank.h
+#include <linux/string.h>
+#include <linux/io.h>
+#include <linux/ioport.h>
+#include <linux/cdev.h>
+#include <linux/device.h>
+
+//#define MYMAJOR		200
+#define MYCNT		1
+#define MYNAME		"testchar"
+
+#define GPJ0CON		S5PV210_GPJ0CON
+#define GPJ0DAT		S5PV210_GPJ0DAT
+
+#define rGPJ0CON	*((volatile unsigned int *)GPJ0CON)
+#define rGPJ0DAT	*((volatile unsigned int *)GPJ0DAT)
+
+#define GPJ0CON_PA	0xe0200240
+#define GPJ0DAT_PA 	0xe0200244
+
+unsigned int *pGPJ0CON;
+unsigned int *pGPJ0DAT;
+
+//int mymajor;
+static dev_t mydev;
+//static struct cdev test_cdev;
+static struct cdev *pcdev;
+static struct class *test_class;
+
+char kbuf[100];			// 内核空间的buf
+
+static int test_chrdev_open(struct inode *inode, struct file *file)
+{
+    // 这个函数中真正应该放置的是打开这个设备的硬件操作代码部分
+    // 但是现在暂时我们写不了这么多，所以用一个printk打印个信息来做代表。
+    printk(KERN_INFO "test_chrdev_open\n");
+
+    rGPJ0CON = 0x11111111;
+    rGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));		// 亮
+
+    return 0;
+}
+
+static int test_chrdev_release(struct inode *inode, struct file *file)
+{
+    printk(KERN_INFO "test_chrdev_release\n");
+
+    rGPJ0DAT = ((1<<3) | (1<<4) | (1<<5));
+
+    return 0;
+}
+
+ssize_t test_chrdev_read(struct file *file, char __user *ubuf, size_t count, loff_t *ppos)
+{
+    int ret = -1;
+
+    printk(KERN_INFO "test_chrdev_read\n");
+
+    ret = copy_to_user(ubuf, kbuf, count);
+    if (ret)
+    {
+        printk(KERN_ERR "copy_to_user fail\n");
+        return -EINVAL;
+    }
+    printk(KERN_INFO "copy_to_user success..\n");
+
+
+    return 0;
+}
+
+// 写函数的本质就是将应用层传递过来的数据先复制到内核中，然后将之以正确的方式写入硬件完成操作。
+static ssize_t test_chrdev_write(struct file *file, const char __user *ubuf,
+    size_t count, loff_t *ppos)
+{
+    int ret = -1;
+
+    printk(KERN_INFO "test_chrdev_write\n");
+
+    // 使用该函数将应用层传过来的ubuf中的内容拷贝到驱动空间中的一个buf中
+    //memcpy(kbuf, ubuf);		// 不行，因为2个不在一个地址空间中
+    memset(kbuf, 0, sizeof(kbuf));
+    ret = copy_from_user(kbuf, ubuf, count);
+    if (ret)
+    {
+        printk(KERN_ERR "copy_from_user fail\n");
+        return -EINVAL;
+    }
+    printk(KERN_INFO "copy_from_user success..\n");
+
+    if (kbuf[0] == '1')
+    {
+        rGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));
+    }
+    else if (kbuf[0] == '0')
+    {
+        rGPJ0DAT = ((1<<3) | (1<<4) | (1<<5));
+    }
+
+    return 0;
+}
+
+// 自定义一个file_operations结构体变量，并且去填充
+static const struct file_operations test_fops = {
+    .owner		= THIS_MODULE,				// 惯例，直接写即可
+
+    .open		= test_chrdev_open,			// 将来应用open打开这个设备时实际调用的
+    .release	= test_chrdev_release,		// 就是这个.open对应的函数
+    .write 		= test_chrdev_write,
+    .read		= test_chrdev_read,
+};
+
+// 模块安装函数
+static int __init chrdev_init(void)
+{
+    int retval;
+
+    printk(KERN_INFO "chrdev_init helloworld init\n");
+
+    // 使用新的cdev接口来注册字符设备驱动
+    // 新的接口注册字符设备驱动需要2步
+
+    // 第1步：分配主次设备号
+    retval = alloc_chrdev_region(&mydev, 12, MYCNT, MYNAME);
+    if (retval < 0)
+    {
+        printk(KERN_ERR "Unable to alloc minors for %s\n", MYNAME);
+        goto flag1;
+    }
+    printk(KERN_INFO "alloc_chrdev_region success\n");
+    printk(KERN_INFO "major = %d, minor = %d.\n", MAJOR(mydev), MINOR(mydev));
+
+
+    // 第2步：注册字符设备驱动
+    pcdev = cdev_alloc();			// 给pcdev分配内存，指针实例化
+    //cdev_init(pcdev, &test_fops);
+    pcdev->owner = THIS_MODULE;
+    pcdev->ops = &test_fops;
+
+    retval = cdev_add(pcdev, mydev, MYCNT);
+    if (retval) {
+        printk(KERN_ERR "Unable to cdev_add\n");
+        goto flag2;
+    }
+    printk(KERN_INFO "cdev_add success\n");
+
+    // 注册字符设备驱动完成后，添加设备类的操作，以让内核帮我们发信息
+    // 给udev，让udev自动创建和删除设备文件
+    test_class = class_create(THIS_MODULE, "aston_class");
+    if (IS_ERR(test_class))
+        return -EINVAL;
+    // 最后1个参数字符串，就是我们将来要在/dev目录下创建的设备文件的名字
+    // 所以我们这里要的文件名是/dev/test
+    device_create(test_class, NULL, mydev, NULL, "test111");
+
+    // 使用动态映射的方式来操作寄存器
+    if (!request_mem_region(GPJ0CON_PA, 4, "GPJ0CON"))
+//		return -EINVAL;
+        goto flag3;
+    if (!request_mem_region(GPJ0DAT_PA, 4, "GPJ0CON"))
+//		return -EINVAL;
+        goto flag3;
+
+    pGPJ0CON = ioremap(GPJ0CON_PA, 4);
+    pGPJ0DAT = ioremap(GPJ0DAT_PA, 4);
+
+    *pGPJ0CON = 0x11111111;
+    *pGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));		// 亮
+
+    //goto flag0:
+    return 0;
+
+// 如果第4步才出错跳转到这里来
+    release_mem_region(GPJ0CON_PA, 4);
+    release_mem_region(GPJ0DAT_PA, 4);
+
+// 如果第3步才出错跳转到这里来
+flag3:
+    cdev_del(pcdev);
+
+// 如果第2步才出错跳转到这里来
+flag2:
+    // 在这里把第1步做成功的东西给注销掉
+    unregister_chrdev_region(mydev, MYCNT);
+// 如果第1步才出错跳转到这里来
+flag1:
+    return -EINVAL;
+//flag0:
+//	return 0;
+}
+
+// 模块下载函数
+static void __exit chrdev_exit(void)
+{
+    printk(KERN_INFO "chrdev_exit helloworld exit\n");
+
+    *pGPJ0DAT = ((1<<3) | (1<<4) | (1<<5));
+
+    // 解除映射
+    iounmap(pGPJ0CON);
+    iounmap(pGPJ0DAT);
+    release_mem_region(GPJ0CON_PA, 4);
+    release_mem_region(GPJ0DAT_PA, 4);
+
+/*
+    // 在module_exit宏调用的函数中去注销字符设备驱动
+    unregister_chrdev(mymajor, MYNAME);
+*/
+
+    device_destroy(test_class, mydev);
+    class_destroy(test_class);
+
+    // 使用新的接口来注销字符设备驱动
+    // 注销分2步：
+    // 第一步真正注销字符设备驱动用cdev_del
+    cdev_del(pcdev);
+    // 第二步去注销申请的主次设备号
+    unregister_chrdev_region(mydev, MYCNT);
+}
+
+module_init(chrdev_init);
+module_exit(chrdev_exit);
+
+// MODULE_xxx这种宏作用是用来添加模块描述信息
+MODULE_LICENSE("GPL");				// 描述模块的许可证
+MODULE_AUTHOR("SummerGift");		// 描述模块的作者
+MODULE_DESCRIPTION("module test");	// 描述模块的介绍信息
+MODULE_ALIAS("alias xxx");			// 描述模块的别名信息
+```
+
+### 4.4 设备类代码分析
+
+可以通过 /sys/class/xxx/ 中的文件来获取设备类的相关信息。
+
+- 设备类创建
+
+```
+class_create
+	__class_create
+		__class_register
+			kset_register
+				kobject_uevent
+```
+
+- 通过设备类创建设备
+
+```
+device_create
+	device_create_vargs
+		kobject_set_name_vargs
+		device_register
+			device_add
+				kobject_add
+					device_create_file
+					device_create_sys_dev_entry
+					devtmpfs_create_node
+					device_add_class_symlinks
+					device_add_attrs
+					device_pm_add
+					kobject_uevent
+```
+
+### 4.5 静态映射表建立过程
+
+- 建立映射表的三个关键部分
+
+映射表具体物理地址和虚拟地址的值相关的宏定义。
+
+- 映射表建立函数。
+
+该函数负责由(1)中的映射表来建立linux内核的页表映射关系。
+
+在 `kernel/arch/arm/mach-s5pv210/mach-smdkc110.c` 中的 `smdkc110_map_io` 函数
+```
+  smdkc110_map_io
+  	s5p_init_io
+  		iotable_init
+```
+
+经过分析，真正的内核移植时给定的静态映射表在 `arch/arm/plat-s5p/cpu.c` 中的`s5p_iodesc`，本质是一个结构体数组，数组中每一个元素就是一个映射，这个映射描述了一段物理地址到虚拟地址之间的映射。这个结构体数组所记录的几个映射关系被 `iotable_init` 所使用，该函数负责将这个结构体数组格式的表建立成 MMU 所能识别的页表映射关系，这样在开机后可以直接使用相对应的虚拟地址来访问对应的物理地址。
+
+- 开机时调用映射表建立函数
+开机时（kernel启动时）`smdkc110_map_io` 怎么被调用的？
+```
+start_kernel
+	setup_arch
+		paging_init
+			devicemaps_init
+```
+
+```
+if (mdesc->map_io)
+		mdesc->map_io();
+```
+
+### 4.6 常规寄存器操作方式
+
+- 使用结构体封装的方式来操作寄存器
+
+```c
+#include <linux/module.h>		// module_init  module_exit
+#include <linux/init.h>			// __init   __exit
+#include <linux/fs.h>
+#include <asm/uaccess.h>
+#include <mach/regs-gpio.h>
+#include <mach/gpio-bank.h>		// arch/arm/mach-s5pv210/include/mach/gpio-bank.h
+#include <linux/string.h>
+#include <linux/io.h>
+#include <linux/ioport.h>
+
+typedef struct GPJ0REG
+{
+    volatile unsigned int gpj0con;
+    volatile unsigned int gpj0dat;
+}gpj0_reg_t;
+
+
+#define MYMAJOR		200
+#define MYNAME		"testchar"
+
+#define GPJ0CON		S5PV210_GPJ0CON
+#define GPJ0DAT		S5PV210_GPJ0DAT
+
+#define rGPJ0CON	*((volatile unsigned int *)GPJ0CON)
+#define rGPJ0DAT	*((volatile unsigned int *)GPJ0DAT)
+
+//#define GPJ0CON_PA	0xe0200240
+//#define GPJ0DAT_PA 	0xe0200244
+#define GPJ0_REGBASE	0xe0200240
+
+//unsigned int *pGPJ0CON;
+//unsigned int *pGPJ0DAT;
+gpj0_reg_t *pGPJ0REG;
+int mymajor;
+char kbuf[100];			// 内核空间的buf
+
+static int test_chrdev_open(struct inode *inode, struct file *file)
+{
+    // 这个函数中真正应该放置的是打开这个设备的硬件操作代码部分
+    // 但是现在暂时我们写不了这么多，所以用一个printk打印个信息来做代表。
+    printk(KERN_INFO "test_chrdev_open\n");
+    
+    rGPJ0CON = 0x11111111;
+    rGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));		// 亮
+    
+    return 0;
+}
+
+static int test_chrdev_release(struct inode *inode, struct file *file)
+{
+    printk(KERN_INFO "test_chrdev_release\n");
+    
+    rGPJ0DAT = ((1<<3) | (1<<4) | (1<<5));
+    
+    return 0;
+}
+
+ssize_t test_chrdev_read(struct file *file, char __user *ubuf, size_t count, loff_t *ppos)
+{
+    int ret = -1;
+    
+    printk(KERN_INFO "test_chrdev_read\n");
+    
+    ret = copy_to_user(ubuf, kbuf, count);
+    if (ret)
+    {
+        printk(KERN_ERR "copy_to_user fail\n");
+        return -EINVAL;
+    }
+    printk(KERN_INFO "copy_to_user success..\n");
+    
+    
+    return 0;
+}
+
+// 写函数的本质就是将应用层传递过来的数据先复制到内核中，然后将之以正确的方式写入硬件完成操作。
+static ssize_t test_chrdev_write(struct file *file, const char __user *ubuf,
+    size_t count, loff_t *ppos)
+{
+    int ret = -1;
+    
+    printk(KERN_INFO "test_chrdev_write\n");
+
+    // 使用该函数将应用层传过来的ubuf中的内容拷贝到驱动空间中的一个buf中
+    //memcpy(kbuf, ubuf);		// 不行，因为2个不在一个地址空间中
+    memset(kbuf, 0, sizeof(kbuf));
+    ret = copy_from_user(kbuf, ubuf, count);
+    if (ret)
+    {
+        printk(KERN_ERR "copy_from_user fail\n");
+        return -EINVAL;
+    }
+    printk(KERN_INFO "copy_from_user success..\n");
+    
+    if (kbuf[0] == '1')
+    {
+        rGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));
+    }
+    else if (kbuf[0] == '0')
+    {
+        rGPJ0DAT = ((1<<3) | (1<<4) | (1<<5));
+    }
+    return 0;
+}
+
+// 自定义一个file_operations结构体变量，并且去填充
+static const struct file_operations test_fops = {
+    .owner		= THIS_MODULE,				// 惯例，直接写即可
+    
+    .open		= test_chrdev_open,			// 将来应用open打开这个设备时实际调用的
+    .release	= test_chrdev_release,		// 就是这个.open对应的函数
+    .write 		= test_chrdev_write,
+    .read		= test_chrdev_read,
+};
+
+// 模块安装函数
+static int __init chrdev_init(void)
+{	
+    printk(KERN_INFO "chrdev_init helloworld init\n");
+
+    // 在module_init宏调用的函数中去注册字符设备驱动
+    // major传0进去表示要让内核帮我们自动分配一个合适的空白的没被使用的主设备号
+    // 内核如果成功分配就会返回分配的主设备好；如果分配失败会返回负数
+    mymajor = register_chrdev(0, MYNAME, &test_fops);
+    if (mymajor < 0)
+    {
+        printk(KERN_ERR "register_chrdev fail\n");
+        return -EINVAL;
+    }
+    printk(KERN_INFO "register_chrdev success... mymajor = %d.\n", mymajor);
+    
+/*	
+    // 使用动态映射的方式来操作寄存器
+    if (!request_mem_region(GPJ0CON_PA, 4, "GPJ0CON"))
+        return -EINVAL;
+    if (!request_mem_region(GPJ0DAT_PA, 4, "GPJ0CON"))
+        return -EINVAL;
+    
+    pGPJ0CON = ioremap(GPJ0CON_PA, 4);
+    pGPJ0DAT = ioremap(GPJ0DAT_PA, 4);
+    
+    *pGPJ0CON = 0x11111111;
+    *pGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));		// 亮
+*/
+    // 2步完成了映射
+    if (!request_mem_region(GPJ0_REGBASE, sizeof(gpj0_reg_t), "GPJ0REG"))
+        return -EINVAL;
+    pGPJ0REG = ioremap(GPJ0_REGBASE, sizeof(gpj0_reg_t));
+    // 映射之后用指向结构体的指针来进行操作
+    // 指针使用->结构体内元素的方式来操作各个寄存器
+    pGPJ0REG->gpj0con = 0x11111111;
+    pGPJ0REG->gpj0dat = ((0<<3) | (0<<4) | (0<<5));		// 亮
+
+    return 0;
+}
+
+// 模块下载函数
+static void __exit chrdev_exit(void)
+{
+    printk(KERN_INFO "chrdev_exit helloworld exit\n");
+
+//	*pGPJ0DAT = ((1<<3) | (1<<4) | (1<<5));	
+    pGPJ0REG->gpj0dat = ((1<<3) | (1<<4) | (1<<5));	
+    
+    // 解除映射
+/*
+    iounmap(pGPJ0CON);
+    iounmap(pGPJ0DAT);
+    release_mem_region(GPJ0CON_PA, 4);
+    release_mem_region(GPJ0DAT_PA, 4);
+*/
+    iounmap(pGPJ0REG);
+    release_mem_region(GPJ0_REGBASE, sizeof(gpj0_reg_t));
+    
+    // 在module_exit宏调用的函数中去注销字符设备驱动
+    unregister_chrdev(mymajor, MYNAME);
+    
+//	rGPJ0DAT = ((1<<3) | (1<<4) | (1<<5));
+}
+
+module_init(chrdev_init);
+module_exit(chrdev_exit);
+
+// MODULE_xxx这种宏作用是用来添加模块描述信息
+MODULE_LICENSE("GPL");				// 描述模块的许可证
+MODULE_AUTHOR("SummerGift");				// 描述模块的作者
+MODULE_DESCRIPTION("module test");	// 描述模块的介绍信息
+MODULE_ALIAS("alias xxx");			// 描述模块的别名信息
+```
+
+- 使用内核内核提供的读写寄存器接口，writel 和 readl ，iowrite32 和 ioread32
+
+```c
+#include <linux/module.h>		// module_init  module_exit
+#include <linux/init.h>			// __init   __exit
+#include <linux/fs.h>
+#include <asm/uaccess.h>
+#include <mach/regs-gpio.h>
+#include <mach/gpio-bank.h>		// arch/arm/mach-s5pv210/include/mach/gpio-bank.h
+#include <linux/string.h>
+#include <linux/io.h>
+#include <linux/ioport.h>
+
+#define MYMAJOR		200
+#define MYNAME		"testchar"
+
+#define GPJ0CON		S5PV210_GPJ0CON
+#define GPJ0DAT		S5PV210_GPJ0DAT
+
+#define rGPJ0CON	*((volatile unsigned int *)GPJ0CON)
+#define rGPJ0DAT	*((volatile unsigned int *)GPJ0DAT)
+
+#define GPJ0CON_PA	0xe0200240
+#define GPJ0DAT_PA 	0xe0200244
+
+#define S5P_GPJ0REG(x)		(x)
+#define S5P_GPJ0CON			S5P_GPJ0REG(0)
+#define S5P_GPJ0DAT			S5P_GPJ0REG(4)
+
+unsigned int *pGPJ0CON;
+unsigned int *pGPJ0DAT;
+
+static void __iomem *baseaddr;			// 寄存器的虚拟地址的基地址
+
+int mymajor;
+
+char kbuf[100];			// 内核空间的buf
+
+static int test_chrdev_open(struct inode *inode, struct file *file)
+{
+	// 这个函数中真正应该放置的是打开这个设备的硬件操作代码部分
+	// 但是现在暂时我们写不了这么多，所以用一个printk打印个信息来做代表。
+	printk(KERN_INFO "test_chrdev_open\n");
+	
+	rGPJ0CON = 0x11111111;
+	rGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));		// 亮
+	
+	return 0;
+}
+
+static int test_chrdev_release(struct inode *inode, struct file *file)
+{
+	printk(KERN_INFO "test_chrdev_release\n");
+	
+	rGPJ0DAT = ((1<<3) | (1<<4) | (1<<5));
+	
+	return 0;
+}
+
+ssize_t test_chrdev_read(struct file *file, char __user *ubuf, size_t count, loff_t *ppos)
+{
+	int ret = -1;
+	
+	printk(KERN_INFO "test_chrdev_read\n");
+	
+	ret = copy_to_user(ubuf, kbuf, count);
+	if (ret)
+	{
+		printk(KERN_ERR "copy_to_user fail\n");
+		return -EINVAL;
+	}
+	printk(KERN_INFO "copy_to_user success..\n");
+	
+	
+	return 0;
+}
+
+// 写函数的本质就是将应用层传递过来的数据先复制到内核中，然后将之以正确的方式写入硬件完成操作。
+static ssize_t test_chrdev_write(struct file *file, const char __user *ubuf,
+	size_t count, loff_t *ppos)
+{
+	int ret = -1;
+	
+	printk(KERN_INFO "test_chrdev_write\n");
+
+	// 使用该函数将应用层传过来的ubuf中的内容拷贝到驱动空间中的一个buf中
+	//memcpy(kbuf, ubuf);		// 不行，因为2个不在一个地址空间中
+	memset(kbuf, 0, sizeof(kbuf));
+	ret = copy_from_user(kbuf, ubuf, count);
+	if (ret)
+	{
+		printk(KERN_ERR "copy_from_user fail\n");
+		return -EINVAL;
+	}
+	printk(KERN_INFO "copy_from_user success..\n");
+	
+	if (kbuf[0] == '1')
+	{
+		rGPJ0DAT = ((0<<3) | (0<<4) | (0<<5));
+	}
+	else if (kbuf[0] == '0')
+	{
+		rGPJ0DAT = ((1<<3) | (1<<4) | (1<<5));
+	}
+	
+	return 0;
+}
+
+// 自定义一个file_operations结构体变量，并且去填充
+static const struct file_operations test_fops = {
+	.owner		= THIS_MODULE,				// 惯例，直接写即可
+	
+	.open		= test_chrdev_open,			// 将来应用open打开这个设备时实际调用的
+	.release	= test_chrdev_release,		// 就是这个.open对应的函数
+	.write 		= test_chrdev_write,
+	.read		= test_chrdev_read,
+};
+
+// 模块安装函数
+static int __init chrdev_init(void)
+{	
+	printk(KERN_INFO "chrdev_init helloworld init\n");
+
+	// 在module_init宏调用的函数中去注册字符设备驱动
+	// major传0进去表示要让内核帮我们自动分配一个合适的空白的没被使用的主设备号
+	// 内核如果成功分配就会返回分配的主设备好；如果分配失败会返回负数
+	mymajor = register_chrdev(0, MYNAME, &test_fops);
+	if (mymajor < 0)
+	{
+		printk(KERN_ERR "register_chrdev fail\n");
+		return -EINVAL;
+	}
+	printk(KERN_INFO "register_chrdev success... mymajor = %d.\n", mymajor);
+	
+	// 测试3：用1次ioremap映射多个寄存器得到虚拟地址，测试成功
+	if (!request_mem_region(GPJ0CON_PA, 8, "GPJ0BASE"))
+		return -EINVAL;
+
+	baseaddr = ioremap(GPJ0CON_PA, 8);
+	
+	writel(0x11111111, baseaddr + S5P_GPJ0CON);
+	writel(((0<<3) | (0<<4) | (0<<5)), baseaddr + S5P_GPJ0DAT);
+
+	return 0;
+}
+
+// 模块下载函数
+static void __exit chrdev_exit(void)
+{
+	printk(KERN_INFO "chrdev_exit helloworld exit\n");
+
+	writel(((1<<3) | (1<<4) | (1<<5)), baseaddr + S5P_GPJ0DAT);	
+	
+	iounmap(baseaddr);
+	release_mem_region(baseaddr, 8);
+	
+	// 在module_exit宏调用的函数中去注销字符设备驱动
+	unregister_chrdev(mymajor, MYNAME);
+	
+//	rGPJ0DAT = ((1<<3) | (1<<4) | (1<<5));
+}
+
+module_init(chrdev_init);
+module_exit(chrdev_exit);
+
+// MODULE_xxx这种宏作用是用来添加模块描述信息
+MODULE_LICENSE("GPL");				// 描述模块的许可证
+MODULE_AUTHOR("SummerGift");				// 描述模块的作者
+MODULE_DESCRIPTION("module test");	// 描述模块的介绍信息
+MODULE_ALIAS("alias xxx");			// 描述模块的别名信息
 ```
 
