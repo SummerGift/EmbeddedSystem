@@ -10,11 +10,11 @@
 
 嵌入式系统基础相关内容：
 
-- [ARM](Arm/)             ARM 架构
-- [MCU](MCU/)            嵌入式处理器
-- [Network](Network/)     网络与云端
-- [Tools](Tools/)           开发中常用到的高效工具
-- [Linux](Linux/)           嵌入式 Linux
+- [ARM](Arm/)
+- [MCU](MCU/) 
+- [Network](Network/)
+- [Tools](Tools/) 
+- [Embedded Linux](Linux/)
 
 主流编程语言相关内容：
 
@@ -42,5 +42,5 @@
 
 ## 一百天持续学习计划
 
-- 2019.07.15
-开启一百天持续学习更新计划。
+- 2019.07.15 - 2019.09.15
+开启一百天持续学习更新计划，在本学习周期中，将初步完成 `Embedded Linux`  相关内容。
