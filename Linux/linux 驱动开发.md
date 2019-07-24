@@ -2023,7 +2023,7 @@ MODULE_ALIAS("alias xxx");			// 描述模块的别名信息
 
 内核开发者对驱动框架进行开发和维护、升级，对应 led-class.c 和 led-core.c。SoC 厂商的驱动工程师对设备驱动源码进行编写、调试，提供参考版本，对应 leds-s3c24xx.c。做产品的厂商的驱动工程师以 SoC 厂商提供的驱动源码为基础，来做移植和调试。
 
-#### 5.2.3 初步分析led驱动框架源码
+#### 5.2.3 初步分析驱动框架
 
 - 涉及到的文件
 
@@ -2074,4 +2074,163 @@ led_classdev_register
 分析可知，`ed_classdev_register` 这个函数其实就是去创建一个属于 `leds` 这个类的一个设备。其实就是去注册一个设备。所以这个函数其实就是 `led` 驱动框架中内核开发者提供给SoC 厂家驱动开发者的一个注册驱动的接口。
 
 当我们使用 `led` 驱动框架去编写驱动的时候，这个 `led_classdev_register` 函数的作用类似于我们之前使用 `file_operations` 方式去注册字符设备驱动时的 `register_chrdev` 函数。
+
+### 5.3 实现独立控制 LED
+
+```c
+#include <linux/module.h>		// module_init  module_exit
+#include <linux/init.h>			// __init   __exit
+#include <linux/fs.h>
+#include <linux/leds.h>
+#include <mach/regs-gpio.h>
+#include <mach/gpio-bank.h>
+#include <linux/io.h>
+#include <linux/ioport.h>
+
+#define GPJ0CON		S5PV210_GPJ0CON
+#define GPJ0DAT		S5PV210_GPJ0DAT
+
+static struct led_classdev mydev1;			// 定义结构体变量
+static struct led_classdev mydev2;			// 定义结构体变量
+static struct led_classdev mydev3;			// 定义结构体变量
+
+// 这个函数就是要去完成具体的硬件读写任务的
+static void s5pv210_led1_set(struct led_classdev *led_cdev,
+                enum led_brightness value)
+{
+    printk(KERN_INFO "s5pv210_led1_set\n");
+    
+    writel(0x11111111, GPJ0CON);
+    
+    // 在这里根据用户设置的值来操作硬件
+    // 用户设置的值就是value
+    if (value == LED_OFF)
+    {
+        // 用户给了个0，希望LED灭
+        //writel(0x11111111, GPJ0CON);
+        // 读改写三部曲
+        writel((readl(GPJ0DAT) | (1<<3)), GPJ0DAT);
+    }
+    else
+    {
+        // 用户给的是非0，希望LED亮
+        //writel(0x11111111, GPJ0CON);
+        writel((readl(GPJ0DAT) & ~(1<<3)), GPJ0DAT);
+    }
+}
+
+static void s5pv210_led2_set(struct led_classdev *led_cdev,
+                enum led_brightness value)
+{
+    printk(KERN_INFO "s5pv2102_led_set\n");
+    
+    writel(0x11111111, GPJ0CON);
+    
+    // 在这里根据用户设置的值来操作硬件
+    // 用户设置的值就是value
+    if (value == LED_OFF)
+    {
+        // 用户给了个0，希望LED灭
+        //writel(0x11111111, GPJ0CON);
+        // 读改写三部曲
+        writel((readl(GPJ0DAT) | (1<<4)), GPJ0DAT);
+    }
+    else
+    {
+        // 用户给的是非0，希望LED亮
+        //writel(0x11111111, GPJ0CON);
+        writel((readl(GPJ0DAT) & ~(1<<4)), GPJ0DAT);
+    }
+}
+
+static void s5pv210_led3_set(struct led_classdev *led_cdev,
+                enum led_brightness value)
+{
+    printk(KERN_INFO "s5pv210_led3_set\n");
+    
+    writel(0x11111111, GPJ0CON);
+    
+    // 在这里根据用户设置的值来操作硬件
+    // 用户设置的值就是value
+    if (value == LED_OFF)
+    {
+        // 用户给了个0，希望LED灭
+        //writel(0x11111111, GPJ0CON);
+        // 读改写三部曲
+        writel((readl(GPJ0DAT) | (1<<5)), GPJ0DAT);
+    }
+    else
+    {
+        // 用户给的是非0，希望LED亮
+        //writel(0x11111111, GPJ0CON);
+        writel((readl(GPJ0DAT) & ~(1<<5)), GPJ0DAT);
+    }
+}
+
+
+static int __init s5pv210_led_init(void)
+{
+    // 用户insmod安装驱动模块时会调用该函数
+    // 该函数的主要任务就是去使用led驱动框架提供的设备注册函数来注册一个设备
+    int ret = -1;
+    
+    // led1
+    mydev1.name = "led1";
+    mydev1.brightness = 255;	
+    mydev1.brightness_set = s5pv210_led1_set;
+    
+    ret = led_classdev_register(NULL, &mydev1);
+    if (ret < 0) {
+        printk(KERN_ERR "led_classdev_register failed\n");
+        return ret;
+    }
+    
+    // led2
+    mydev2.name = "led2";
+    mydev2.brightness = 255;	
+    mydev2.brightness_set = s5pv210_led2_set;
+    
+    ret = led_classdev_register(NULL, &mydev2);
+    if (ret < 0) {
+        printk(KERN_ERR "led_classdev_register failed\n");
+        return ret;
+    }
+    
+    // led3
+    mydev3.name = "led3";
+    mydev3.brightness = 255;	
+    mydev3.brightness_set = s5pv210_led3_set;
+    
+    ret = led_classdev_register(NULL, &mydev3);
+    if (ret < 0) {
+        printk(KERN_ERR "led_classdev_register failed\n");
+        return ret;
+    }
+    
+    return 0;
+}
+
+static void __exit s5pv210_led_exit(void)
+{
+    led_classdev_unregister(&mydev1);
+    led_classdev_unregister(&mydev2);
+    led_classdev_unregister(&mydev3);
+}
+
+module_init(s5pv210_led_init);
+module_exit(s5pv210_led_exit);
+
+// MODULE_xxx这种宏作用是用来添加模块描述信息
+MODULE_LICENSE("GPL");							// 描述模块的许可证
+MODULE_AUTHOR("SummerGift>");	             	// 描述模块的作者
+MODULE_DESCRIPTION("s5pv210 led driver");		// 描述模块的介绍信息
+MODULE_ALIAS("s5pv210_led");					// 描述模块的别名信息
+
+```
+
+进入系统的 `sys/class/leds` 目录下可以看到驱动注册的三个 led 设备，分别为 led1、led2、led3，然后通过 `echo 0 > brightness` 命令来控制 led 的亮灭。
+
+
+
+
 
