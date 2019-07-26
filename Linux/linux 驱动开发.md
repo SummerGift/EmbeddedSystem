@@ -2221,16 +2221,33 @@ module_init(s5pv210_led_init);
 module_exit(s5pv210_led_exit);
 
 // MODULE_xxx这种宏作用是用来添加模块描述信息
-MODULE_LICENSE("GPL");							// 描述模块的许可证
-MODULE_AUTHOR("SummerGift>");	             	// 描述模块的作者
-MODULE_DESCRIPTION("s5pv210 led driver");		// 描述模块的介绍信息
-MODULE_ALIAS("s5pv210_led");					// 描述模块的别名信息
-
+MODULE_LICENSE("GPL");                          // 描述模块的许可证
+MODULE_AUTHOR("SummerGift>");                   // 描述模块的作者
+MODULE_DESCRIPTION("s5pv210 led driver");       // 描述模块的介绍信息
+MODULE_ALIAS("s5pv210_led");                    // 描述模块的别名信息
 ```
 
 进入系统的 `sys/class/leds` 目录下可以看到驱动注册的三个 led 设备，分别为 led1、led2、led3，然后通过 `echo 0 > brightness` 命令来控制 led 的亮灭。
 
+### 5.4 gpiolib 
 
+gpiplib 用于统一管理系统中的 gpio 资源，避免驱动因为互相影响导致系统异常。
 
+- struct s3c_gpio_chip
 
+这个结构体是一个 GPIO 端口的抽象,这个结构体的一个变量就可以完全的描述一个 IO 端口。
+
+端口和 IO 口是两个概念，S5PV210 有很多个IO口（160个左右），这些 IO 口首先被分成 N 个端口（port group），然后每个端口中又包含了 M 个 IO 口。譬如 GPA0 是一个端口，里面包含了 8 个 IO 口，我们一般记作：GPA0_0（或GPA0.0）、GPA0_1。
+
+内核中为每个 GPIO 分配了一个编号，编号是一个数字（譬如一共有 160 个 IO 时编号就可以从 1 到160 连续分布），编号可以让程序很方便的去识别每一个 GPIO。
+
+- s5pv210_gpio_4bit
+ 
+这是一个结构体数组，数组中包含了很多个 struct s3c_gpio_chip 类型的变量。
+
+- S5PV210_GPA0 宏
+
+这个宏的返回值就是 GPA0 端口的某一个 IO 口的编号值，传参就是我们这个 IO 口在 GPA0 端口中的局部编号。
+
+`samsung_gpiolib_add_4bit_chips` 这个函数才是具体进行 gpiolib 的注册的。这个函数接收的参数是我们当前文件中定义好的结构体数组 s5pv210_gpio_4bit（其实 2 个参数分别是数组名和数组元素个数），这个数组中其实就包含了当前系统中所有的 IO 端口的信息（这些信息包含：端口的名字、端口中所有 GPIO 的编号、端口操作寄存器组的虚拟地址基地。
 
