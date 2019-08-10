@@ -2313,4 +2313,69 @@ gpiplib 用于统一管理系统中的 gpio 资源，避免驱动因为互相影
     - udev 的使用离不开 class
     - class 的真正意义在于作为同属于一个 class 的多个设备的容器。也就是说，class 是一种人造概念，目的就是为了对各种设备进行分类管理。当然，class在分类的同时还对每个类贴上了一些标签，这也是设备驱动模型为我们写驱动提供的基础设施。
 
-模型思想很重要，其实就是面向对象的思想。全是结构体套结构体，对基本功要求较高。
+模型思想很重要，其实就是面向对象的思想，全是结构体套结构体，对基本功要求较高。
+
+### 5.4 platform 平台总线工作原理
+#### 5.4.1 何为平台总线
+相对于 usb、pci、i2c 等物理总线来说，platform 总线是虚拟的、抽象出来的。在裸机中，CPU与外部通信的 2 种方式：地址总线式连接和专用接口式连接。平台总线对应地址总线式连接设备，也就是 SoC 内部集成的各种内部外设。
+
+- 平台总线下管理的2员大将
+    - platform 工作体系都定义在 `drivers/base/platform.c` 中
+    - 两个结构体：platform_device 和 platform_driver
+    - 两个接口函数：platform_device_register 和 platform_driver_register
+
+```c
+struct platform_device {
+	const char	* name;			// 平台总线下设备的名字
+	int		id;
+	struct device	dev;		// 所有设备通用的属性部分
+	u32		num_resources;		// 设备使用到的resource的个数
+	struct resource	* resource;	// 设备使用到的资源数组的首地址
+
+	const struct platform_device_id	*id_entry;	// 设备ID表
+	
+	/* arch specific additions */
+	struct pdev_archdata	archdata;			// 自留地，用来提供扩展性的
+};
+
+struct platform_driver {
+	int (*probe)(struct platform_device *);		// 驱动探测函数
+	int (*remove)(struct platform_device *);	// 去掉一个设备
+	void (*shutdown)(struct platform_device *);	// 关闭一个设备
+	int (*suspend)(struct platform_device *, pm_message_t state);
+	int (*resume)(struct platform_device *);
+	struct device_driver driver;				// 所有设备共用的一些属性
+	const struct platform_device_id *id_table;	// 设备 ID 表
+};
+```
+
+
+#### 5.4.2 平台总线体系的工作流程
+
+1. 第一步：系统启动时在 bus 系统中注册 platform
+2. 第二步：内核移植的人负责提供 platform_device
+3. 第三步：写驱动的人负责提供 platform_driver
+4. 第四步：platform 的 match 函数发现 driver 和 device 匹配后，调用 driver 的 probe 函数来完成驱动的初始化和安装，然后设备就工作起来了
+
+代码分析：platform 本身注册:
+
+- 每种总线（不光是 platform，usb、i2c 那些也是）都会带一个 match 方法，match 方法用来对总线下的 device 和 driver 进行匹配。理论上每种总线的匹配算法是不同的，但是实际上一般都是看name 的。
+
+- platform_match 函数就是平台总线的匹配方法。该函数的工作方法是：如果有 id_table 就说明驱动可能支持多个设备，所以这时候要去对比 id_table 中所有的 name，只要找到一个相同的就匹配上了不再找了，如果找完 id_table 都还没找到就说明每匹配上；如果没有 id_table 或者每匹配上，那就直接对比 device 和 driver 的 name，如果匹配上就匹配上了，如果还没匹配上那就匹配失败。
+
+
+#### 5.4.3 platform设备和驱动的注册过程
+
+- 以 leds-s3c24xx.c 为例来分析 platform 设备和驱动的注册过程
+    - platform_driver_register
+    - platform_device_register
+
+- platdata 的用途
+
+platdata 其实就是设备注册时提供的设备有关的一些数据（譬如设备对应的gpio、使用到的中断号、设备名称等）。
+
+这些数据在设备和驱动 match 之后，会由设备方转给驱动方。驱动拿到这些数据后，通过这些数据得知设备的具体信息，然后来操作设备。这样做的好处是：驱动源码中不携带数据，只负责算法（对硬件的操作方法）。现代驱动设计理念就是算法和数据分离，这样最大程度保持驱动的独立性和适应性。
+
+将对设备的操作方法（也就是驱动）和设备本身的数据分离，可以写出通用性更强的驱动程序，不会和具体的设备耦合，也就有了更好的可移植性。
+
+
