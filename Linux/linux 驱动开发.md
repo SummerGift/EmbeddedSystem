@@ -2378,4 +2378,35 @@ platdata 其实就是设备注册时提供的设备有关的一些数据（譬�
 
 将对设备的操作方法（也就是驱动）和设备本身的数据分离，可以写出通用性更强的驱动程序，不会和具体的设备耦合，也就有了更好的可移植性。
 
+### 5.5 misc 类设备
+#### 5.5.1 misc类设备介绍
+中文名：杂项设备\杂散设备，`sys/class/misc`，是一种典型的字符设备，有一套驱动框架，内核实现一部分（misc.c），驱动实现一部分（x210-buzzer.c）。
 
+misc 是对原始的字符设备注册接口的一个类层次的封装，很多典型字符设备都可以归类到misc类中，使用misc驱动框架来管理。
+
+- misc类设备驱动架构
+
+内核开发者实现部分，关键点有2个：一个是类的创建，另一个是开放给驱动开发者的接口，具体设备驱动工程师实现部分。
+
+#### 5.5.2 misc驱动框架源码分析
+
+- misc 源码框架基础
+
+misc 源码框架本身也是一个模块，内核启动时自动加载。源码框架的主要工作：注册misc类，使用老接口注册字符设备驱动（主设备号10），开放 device 注册的接口 misc_register 给驱动工程师。
+
+- misc 类设备的注册
+
+驱动工程师需要借助 misc 来加载自己的驱动时，只需要调用 misc_register 接口注册自己的设备即可，其余均不用管。
+
+- misc_list 链表的作用
+
+内核定义了一个 misc_list 链表用来记录所有内核中注册了的杂散类设备。当我们向内核注册一个misc类设备时，内核就会向misc_list链表中insert一个节点。
+
+```
+#define LIST_HEAD_INIT(name) { &(name), &(name) }
+#define LIST_HEAD(name) \
+	struct list_head name = LIST_HEAD_INIT(name)
+```
+
+原式子：static LIST_HEAD(misc_list);
+展开后：static struct list_head misc_list = { &(misc_list), &(misc_list) }
