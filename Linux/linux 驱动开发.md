@@ -2378,8 +2378,8 @@ platdata 其实就是设备注册时提供的设备有关的一些数据（譬�
 
 将对设备的操作方法（也就是驱动）和设备本身的数据分离，可以写出通用性更强的驱动程序，不会和具体的设备耦合，也就有了更好的可移植性。
 
-### 5.5 misc 类设备
-#### 5.5.1 misc类设备介绍
+## 6. misc 类设备
+### 6.1 misc类设备介绍
 中文名：杂项设备\杂散设备，`sys/class/misc`，是一种典型的字符设备，有一套驱动框架，内核实现一部分（misc.c），驱动实现一部分（x210-buzzer.c）。
 
 misc 是对原始的字符设备注册接口的一个类层次的封装，很多典型字符设备都可以归类到misc类中，使用misc驱动框架来管理。
@@ -2388,7 +2388,7 @@ misc 是对原始的字符设备注册接口的一个类层次的封装，很多
 
 内核开发者实现部分，关键点有2个：一个是类的创建，另一个是开放给驱动开发者的接口，具体设备驱动工程师实现部分。
 
-#### 5.5.2 misc 驱动框架源码分析
+### 6.2 misc 驱动框架源码分析
 
 - misc 源码框架基础
 
@@ -2414,3 +2414,63 @@ misc 源码框架本身也是一个模块，内核启动时自动加载。源码
 - 内核互斥锁
 
 何为互斥锁，定义：DEFINE_MUTEX。上锁 mutex_lock 和解锁 mutex_unlock。内核防止竞争状态的手段：原子访问、自旋锁、互斥锁、信号量。互斥锁和信号量很相似（其实就是计数值为 1 的信号量），互斥锁的出现比信号量晚，实现上比信号量优秀，尽量使用互斥锁。
+
+## 7. framebuffer 设备
+
+### 7.1 什么是 framebuffer
+- framebuffer 帧缓冲（简称fb）是 linux 内核中虚拟出的一个设备
+- framebuffer 向应用层提供一个统一标准接口的显示设备
+- 从驱动来看，fb是一个典型的字符设备，而且创建了一个类 `/sys/class/graphics`
+
+### 7.2 framebuffer 的使用
+1. 设备文件 `/dev/fb0`
+2. 获取设备信息 `#include <linux/fb.h>`
+3. mmap 做映射
+4. 填充 framebuffer
+
+### 7.3 FB 驱动框架总览
+#### 7.3.1 驱动框架部分
+- drivers/video/fbmem.c
+    创建 graphics 类、注册 FB 的字符设备驱动、提供 register_framebuffer 接口给具体 framebuffer 驱动编写着来注册 fb 设备的。本文件相对于 fb 来说，地位和作用和 misc.c 文件相对于杂散类设备来说一样的，结构和分析方法也是类似的。
+- drivers/video/fbsys.c
+    这个文件是处理fb在/sys目录下的一些属性文件的。
+- drivers/video/modedb.c
+    这个文件是管理显示模式（譬如VGA、720P等就是显示模式）的
+- drivers/video/fb_notify.c
+
+#### 7.3.2 驱动部分
+- drivers/video/samsung/s3cfb.c，驱动主体
+- drivers/video/samsung/s3cfb_fimd6x.c，里面有很多LCD硬件操作的函数
+- arch/arm/mach-s5pv210/mach-x210.c，负责提供platform_device的
+- arch/arm/plat-s5p/devs.c，为platform_device提供一些硬件描述信息的
+
+### 7.3 驱动框架分析
+
+- fbmem_init 函数
+    - `#ifdef MODULE`
+    - fb_proc_fops 和 fb 在 proc 文件系统中的表现
+    - register_chrdev 注册 fb 设备
+    - class_create 创建 graphics 类
+    - fbmem_exit 的对应
+
+- fb_fops
+    - read/write/mmap/ioctl
+    - registered_fb 和 num_registered_fb
+    - struct fb_info
+
+- register_framebuffer，fb 驱动框架开放给驱动编写着的注册接口
+    - fb_check_foreignness
+    - remove_conflicting_framebuffers
+    - device_create
+    - fb_init_device
+
+- fb在sysfs中的接口
+device_attrs、dev_set_drvdata 和 dev_get_drvdata。
+
+- fb 的 mode，工作模式
+`b_var_to_videomode`，`fb_add_videomode`。
+
+- 注册登记该fb设备
+`registered_fb[i] = fb_info`，结合fb_read等函数中对fb_info的使用，关键点：数据如何封装、数据由谁准备由谁消费、数据如何传递。
+
+- fb_notifier_call_chain，通知已经注册了的 FB 设备有事件发生
