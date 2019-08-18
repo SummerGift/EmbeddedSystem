@@ -2474,3 +2474,61 @@ device_attrs、dev_set_drvdata 和 dev_get_drvdata。
 `registered_fb[i] = fb_info`，结合fb_read等函数中对fb_info的使用，关键点：数据如何封装、数据由谁准备由谁消费、数据如何传递。
 
 - fb_notifier_call_chain，通知已经注册了的 FB 设备有事件发生
+
+### 7.4 framebuffer 驱动分析
+
+- s3cfb.c
+    注意目录结构的组织，s3cfb_driver。
+    
+- s3c_device_fb
+    1. mach-x210.c 中，被使用
+    2. devs.c 中
+    3. resource 的定义和作用
+
+- probe 函数分析
+struct s3c_platform_fb，这个结构体是 fb 的 platform_data 结构体，这个结构体变量就是platform 设备的私有数据，这个数据在 platform_device.device.platform_data 中存储。在 mach文件中去准备并填充这些数据，在 probe 函数中通过传参的 platform_device 指针取出来。
+
+- struct s3cfb_global		
+这个结构体主要作用是在驱动部分的2个文件（s3cfb.c和s3cfb_fimd6x.c）的函数中做数据传递用的。
+
+- struct resource
+- regulator
+
+- platform_data的传递过程
+  1. to_fb_plat
+  2. s3cfb_set_platdata
+  3. smdkc110_machine_init
+
+- resource的处理
+  - platform_device 中提供 resource 结构体数组
+  - probe 中 platform_get_resource 取出 resource 并且按 FLAG 分头处理
+
+- 一些硬件操作
+  - s3cfb_set_vsync_interrupt
+  - s3cfb_set_global_interrupt
+
+- s3cfb_init_global
+
+- 向框架注册该fb设备
+  - s3cfb_alloc_framebuffer
+  - s3cfb_register_framebuffer
+
+- 一些硬件操作
+    - s3cfb_set_clock
+    - s3cfb_set_window
+    - s3cfb_display_on
+
+- 驱动中处理中断
+    - platform_get_irq
+    - request_irq
+
+- logo显示
+```
+  s3cfb_probe
+  	fb_prepare_logo
+  		fb_find_logo			真正查找logo文件
+    fb_show_logo			
+  		fb_show_logo_line		真正显示logo
+  			fb_do_show_logo
+          info->fbops->fb_imageblit		实际操作硬件 fb 进行显示工作的函数
+```
