@@ -2532,3 +2532,12 @@ struct s3c_platform_fb，这个结构体是 fb 的 platform_data 结构体，这
   			fb_do_show_logo
           info->fbops->fb_imageblit		实际操作硬件 fb 进行显示工作的函数
 ```
+
+## 8. input 子系统
+
+### 8.1 什么是 input 子系统
+
+linux 系统中有各种各样的输入设备，为了统一不同的输入设备，需要使用一个统一的模型来描述。
+
+- struct input_event
+- input 子系统分4个部分：应用层 + input event + input core + 硬件驱动
