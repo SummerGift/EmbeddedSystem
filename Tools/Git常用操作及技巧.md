@@ -97,3 +97,7 @@ git rm --cached hello
 ## GIT与远程REPOSITORY同步TAG和BRANCH
 
 参考如下地址：http://smilejay.com/2013/04/git-sync-tag-and-branch-with-remote/
+
+## 输入输出均不转换换行符
+
+git config --global core.autocrlf false
