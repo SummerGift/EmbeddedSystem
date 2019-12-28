@@ -10,7 +10,7 @@
 - Eclipse
 
 ## 版本管理
-- [Git 工具常用操作及技巧](Git常用操作及技巧.md)
+- [Git 工具常用操作及技巧](../Gist/Git.md)
 - 和 Git 配合使用的对比工具：[Beyond Compare](https://www.scootersoftware.com/download.php)，界面简洁，功能强大
 
 ## 终端 shell
