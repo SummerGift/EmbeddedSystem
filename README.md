@@ -4,7 +4,7 @@
 
 # 主要内容
 
-原创技术文章与学习感悟：
+技术文章与学习感悟：
 
 - [Articles](Articles/)
 
@@ -16,11 +16,12 @@
 - [Tools](Tools/) 
 - [Embedded Linux](Linux/)
 
-主流编程语言相关内容：
+编程语言相关内容：
 
 - [C](C/)
 - [C++](C++/)
 - [Python](Python/)
+- [JavaScript](JavaScript/)
 
 数据结构与算法：
 
