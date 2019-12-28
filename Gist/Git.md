@@ -94,10 +94,19 @@ git submodule update --init --recursive
 git rm --cached hello
 ```
 
-## GIT与远程REPOSITORY同步TAG和BRANCH
+## GIT 与远程 REPOSITORY 同步 TAG 和BRANCH
 
 参考如下地址：http://smilejay.com/2013/04/git-sync-tag-and-branch-with-remote/
 
 ## 输入输出均不转换换行符
 
+```sh
 git config --global core.autocrlf false
+```
+## 克隆时指定日志层数
+
+这种方法可以减少下载文件的数量，大大提高下载速度。
+
+```sh
+git clone --depth=1 Git_URL
+```
