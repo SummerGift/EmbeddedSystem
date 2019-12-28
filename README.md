@@ -44,4 +44,4 @@
 
 在这里我推荐书籍是由 [Randal E. Bryant](http://www.cs.cmu.edu/~bryant) and [David R. O'Hallaron](http://www.cs.cmu.edu/~droh) 所著的《深入理解计算机系统》第三版。相应可以找到的课程是 MOOC 平台上的由袁春风教授讲授的 [《计算机系统基础》](https://www.icourse163.org/course/NJU-1001625001)课程，帮助我们建立对整个计算机系统抽象层的认识，增强我们解决嵌入式问题中的综合能力。
 
-![1538010353621](assets/1538010353621.png)
+![computer_architecture](Articles/figures/architecture.png)
