@@ -119,3 +119,23 @@ git config --global core.autocrlf false
 ```sh
 git clone --depth=1 Git_URL
 ```
+
+## Enter passphrase for key problem
+
+git 配置完 SSH 以后，push 或者 pull 的时候每次都提示 Enter passphrase for key '/Users/m/.ssh/id_rsa': ，可以这样解决:
+
+1. 终端输入
+```
+eval `ssh-agent`
+ssh-add
+```
+但是关闭终端窗口，或者重新就必须重新输入，治标不治本。
+
+2. 终端输入
+```
+ssh-add -k /Users/m/.ssh/id_rsa
+ssh-add -K privateKey 中privateKey 为/Users/m/.ssh/id_rsa
+```
+
+
+
