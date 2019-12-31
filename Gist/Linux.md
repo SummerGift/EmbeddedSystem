@@ -34,20 +34,26 @@ pip install genpac
  
 4. 生成配置
 
-`
+```
 genpac --proxy="SOCKS5 127.0.0.1:1080" -o autoproxy.pac 
 --gfwlisturl="https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt"
-`
+```
 
 如果上述 github 地址不能访问，可以手动下载该文件，然后使用 --gfwlist-local=FILE 指令来指定 List.
 
 5. 编辑 /etc/profile 在文件最后添加（具体端口配置和ss 客户端保持一致）
 
+```
 export http_proxy=http://127.0.0.1:1080
 export https_proxy=http://127.0.0.1:1080
 export ftp_proxy=http://127.0.0.1:1080
+```
 
 6. 让配置生效就可以了
 `
 source /etc/profile 
 `
+
+### Package libffi was not found in the pkg-config search path
+
+sudo apt-get install libffi-dev
