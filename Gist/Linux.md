@@ -14,3 +14,38 @@ wget https://nodejs.org/dist/v12.14.0/node-v12.14.0-linux-x64.tar.xz
 `
 python -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple packages_name
 `
+
+### ubuntu wsl 子系统使用win10 系统ss代理步骤
+
+1. 安装python pip
+`
+apt install python-pip
+ `
+ 
+2. 升级pip
+`
+pip install --upgrade pip
+`
+
+3. 安装genpac 工具
+`
+pip install genpac
+ `
+ 
+4. 生成配置
+`
+genpac --proxy="SOCKS5 127.0.0.1:1080" -o autoproxy.pac --gfwlist-url="https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt"
+`
+
+如果上述 github 地址不能访问，可以手动下载该文件，然后使用 --gfwlist-local=FILE 指令来指定 List.
+
+5. 编辑 /etc/profile 在文件最后添加（具体端口配置和ss 客户端保持一致）
+
+export http_proxy=http://127.0.0.1:1080
+export https_proxy=http://127.0.0.1:1080
+export ftp_proxy=http://127.0.0.1:1080
+
+6. 让配置生效就可以了
+`
+source /etc/profile 
+`
