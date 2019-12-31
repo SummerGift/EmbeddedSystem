@@ -56,4 +56,9 @@ source /etc/profile
 
 ### Package libffi was not found in the pkg-config search path
 
+site:
+https://config9.com/linux/package-libffi-was-not-found-in-the-pkg-config-search-path-redhat6-5/
+
+```
 sudo apt-get install libffi-dev
+```
