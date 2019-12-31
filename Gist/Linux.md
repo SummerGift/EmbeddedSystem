@@ -33,8 +33,10 @@ pip install genpac
  `
  
 4. 生成配置
+
 `
-genpac --proxy="SOCKS5 127.0.0.1:1080" -o autoproxy.pac --gfwlist-url="https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt"
+genpac --proxy="SOCKS5 127.0.0.1:1080" -o autoproxy.pac 
+--gfwlisturl="https://raw.githubusercontent.com/gfwlist/gfwlist/master/gfwlist.txt"
 `
 
 如果上述 github 地址不能访问，可以手动下载该文件，然后使用 --gfwlist-local=FILE 指令来指定 List.
