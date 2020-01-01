@@ -62,3 +62,12 @@ https://config9.com/linux/package-libffi-was-not-found-in-the-pkg-config-search-
 ```
 sudo apt-get install libffi-dev
 ```
+
+### gcc 编译出现 /usr/include/stdio.h:27:10: fatal error: bits/libc-header-start.h
+
+可以尝试输入如下命令，主要是gcc安装环境没有安装完善。
+
+```
+sudo apt-get install gcc-multilib
+```
+
