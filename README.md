@@ -54,12 +54,12 @@
 
 - 吾听吾忘
 
-  ![LSBAWS_confucius_hear](assets/LSBAWS_confucius_hear.png)
+  ![LSBAWS_confucius_hear](Articles/figures/LSBAWS_confucius_hear.png)
 
 - 吾见吾记
 
-  ![LSBAWS_confucius_see](assets/LSBAWS_confucius_see.png)
+  ![LSBAWS_confucius_see](Articles/figures/LSBAWS_confucius_see.png)
 
 - 吾做吾悟
 
-  ![LSBAWS_confucius_do](assets/LSBAWS_confucius_do.png)
+  ![LSBAWS_confucius_do](Articles/figures/LSBAWS_confucius_do.png)
