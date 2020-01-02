@@ -45,3 +45,21 @@
 在这里我推荐书籍是由 [Randal E. Bryant](http://www.cs.cmu.edu/~bryant) and [David R. O'Hallaron](http://www.cs.cmu.edu/~droh) 所著的《深入理解计算机系统》第三版。相应可以找到的课程是 MOOC 平台上的由袁春风教授讲授的 [《计算机系统基础》](https://www.icourse163.org/course/NJU-1001625001)课程，帮助我们建立对整个计算机系统抽象层的认识，增强我们解决嵌入式问题中的综合能力。
 
 ![computer_architecture](Articles/figures/architecture.png)
+
+我认为想要成为一个更好的 developer 必须对日常使用的底层软件系统有更深入的了解，包括编程语言、编译器、解释器、数据库、操作系统、软件框架等。还有，想要对底层的系统有更深的了解，我觉得有必要从头开始，一砖一瓦地重建他们。
+
+按照这种思路，我们可以根据教程自己动手写一个解释器或者编译器，也可以自己动手整理属于自己的知识体系，这里的重点是自己动手，自己构建，我认为这很重要。
+
+孔子是这样说的：
+
+- 吾听吾忘
+
+  ![LSBAWS_confucius_hear](assets/LSBAWS_confucius_hear.png)
+
+- 吾见吾记
+
+  ![LSBAWS_confucius_see](assets/LSBAWS_confucius_see.png)
+
+- 吾做吾悟
+
+  ![LSBAWS_confucius_do](assets/LSBAWS_confucius_do.png)
