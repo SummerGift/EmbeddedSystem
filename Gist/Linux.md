@@ -93,3 +93,24 @@ sudo apt-get install libffi-dev
 sudo apt-get install gcc-multilib
 ```
 
+### 定时任务管理器 crontab 常用操作
+
+- 查看当前系统任务
+```
+crontab -l
+```
+
+- 指定文件为当前系统任务列表
+```
+crontab file
+```
+
+注意事项：
+
+1. 使用 sh 脚本作为系统任务，便于收集日志，统计运行时间
+2. 如果需要设置一次性的环境变量，那么需要在 sh 脚本中重新设置，否则系统启动的临时环境变量可能不生效
+
+
+
+
+
