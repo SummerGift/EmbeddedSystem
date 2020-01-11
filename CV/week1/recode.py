@@ -4,20 +4,17 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 # 读取操作
-
 img_ori = cv2.imread('lenna.jpg', 1)  # 彩色图片
 img_gray = cv2.imread('lenna.jpg', 0)  # 黑白图片
 print(img_ori.shape)
 
 # 打印操作，默认通道为 BGR
-
 # cv2.imshow("lenna", img_ori)
 # key = cv2.waitKey()
 # if key == 27:
 #     cv2.destroyAllWindows()
 
 # matplotlib 打印操作，默认通道为 RGB
-
 plt.imshow(img_ori)
 plt.show()
 
