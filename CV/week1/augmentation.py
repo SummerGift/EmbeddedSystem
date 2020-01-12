@@ -10,7 +10,7 @@ def image_crop(src, x1, y1, x2, y2):
 
     Parameters
     ----------
-    :param src: Image source from import in BGR format
+    :param src: Input image in BGR format
     :param x1: Initial coordinates for image cropping
     :param y1: Initial coordinates for image cropping
     :param x2: End coordinates of image cropping
@@ -25,17 +25,13 @@ def color_shift(img, change2b=0, change2g=0, change2r=0):
 
     Parameters
     ----------
-    :param img: image source
-    :param change2b: Adjustment value of the channel
-    :param change2r: Adjustment value of the channel
-    :param change2g: Adjustment value of the channel
+    :param img: Input image in BGR format
+    :param change2b: Adjustment value of blue channel
+    :param change2g: Adjustment value of green channel
+    :param change2r: Adjustment value of red channel
     """
 
     B, G, R = cv2.split(img)
-
-    print(change2b)
-    print(change2g)
-    print(change2r)
 
     if change2b == 0:
         pass
@@ -73,9 +69,37 @@ def color_shift(img, change2b=0, change2g=0, change2r=0):
     return cv2.merge((B, G, R))
 
 
-def rotation():
-    pass
+def rotation(img, angle):
+    """
+    Rotate the input image.
+
+    Parameters
+    ----------
+    :param img: Input image in BGR format
+    :param angle: Rotation angle
+    """
+
+    M = cv2.getRotationMatrix2D((img.shape[1] / 2, img.shape[0] / 2), angle, 1)  # center, angle, scale
+    return cv2.warpAffine(img, M, (img.shape[1], img.shape[0]))
 
 
-def perspective_transform():
-    pass
+def perspective_transform(img, src_pts, des_pts):
+    """
+    Perspective transform for image.
+
+    Parameters
+    ----------
+    :param img: Input image in BGR format
+    :param src_pts: Initial coordinates for image transform
+    :param des_pts: End coordinates for image transform
+    """
+
+    height, width, channels = img.shape
+
+    assert len(src_pts) == 4
+    assert len(des_pts) == 4
+
+    pts_from = np.float32(src_pts)
+    pts_to = np.float32(des_pts)
+    M_warp = cv2.getPerspectiveTransform(pts_from, pts_to)
+    return cv2.warpPerspective(img, M_warp, (width, height))
