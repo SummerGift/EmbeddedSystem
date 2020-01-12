@@ -25,11 +25,7 @@
 
 环境搭建及工具：
 
-- [Linux](Gist/Linux.md) 
-- [Mac](Gist/Mac.md) 
-- [Windows](Gist/Win.md) 
-- [Git](Gist/Git.md) 
-- [Docker](Gist/Docker.md) 
+- [Gist](Gist/) 
 - [Tools](Tools/) 
 
 理论基础：
