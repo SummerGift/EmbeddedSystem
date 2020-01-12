@@ -1,8 +1,12 @@
-# 函数使用说明
+# API Function For Details
+
+## Source Code
 
 - [augmentation source code](augmentation.py)
 
-## 1. image crop
+## Examples
+
+### 1. image crop
 
 ```python
 import cv2
@@ -14,7 +18,7 @@ plt.imshow(cv2.cvtColor(img_ori, cv2.COLOR_BGR2RGB))
 plt.show()
 ```
 
-## 2. image color shift
+### 2. image color shift
 
 ```python
 import cv2
@@ -26,7 +30,7 @@ plt.imshow(cv2.cvtColor(img_random_color, cv2.COLOR_BGR2RGB))
 plt.show()
 ```
 
-## 3. image rotation
+### 3. image rotation
 
 ```python
 import cv2
@@ -38,7 +42,7 @@ plt.imshow(cv2.cvtColor(img_random_color, cv2.COLOR_BGR2RGB))
 plt.show()
 ```
 
-## 4. image perspective transform
+### 4. image perspective transform
 
 ```python
 import cv2
