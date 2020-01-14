@@ -1,3 +1,14 @@
+# 线性代数
+## 线性方程组
+## 行列式与克拉默法则
+## 矩阵及其运算
+## 神经网络中的矩阵/向量
+## 矩阵的性质
+## 矩阵与线性变换
+## 线性变换的几何意义
+## 特征值与特征向量
+## NumPy 中矩阵的操作
+
 ## Dot products and duality
 
 Traditionally, dot products or something that's introduced really early on in a linear algebra
