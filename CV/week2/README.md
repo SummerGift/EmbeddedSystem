@@ -35,9 +35,8 @@
 
 图像滤波既可以在实域进行，也可以在频域进行。图像滤波可以更改或者增强图像。通过滤波，可以强调一些特征或者去除图像中一些不需要的部分。滤波是一个邻域操作算子，利用给定像素周围的像素的值确定次像素的最终输出值。
 
-$$
-O(i,j)=∑_{m,n}I(i+m,j+n)∗K(m,n)
-$$
+![\large O(i,j)=\sum_{m,n}I(i+m, j+n)\cdot K(m,n)](http://latex.codecogs.com/gif.latex?%5Cinline%20%5Cdpi%7B150%7D%20%5Clarge%20O%28i%2Cj%29%3D%5Csum_%7Bm%2Cn%7DI%28i+m%2C%20j+n%29%5Ccdot%20K%28m%2Cn%29)
+
 
 其中 K 为滤波器，在很多文献中也成为核（kernel）。常见的应用包括去噪、图像增强、检测边缘、检测角点、模板匹配等。
 
@@ -45,14 +44,7 @@ $$
 
 用其像素点周围像素的平均值代替原像素值，在滤除噪声的同时也会滤掉图像的边缘信息。在 OpenCV 中，可以使用 `boxFilter` 和 blur 函数进行均值滤波，均值滤波的核为：
 
-$$
-\frac{1}{ksize.width{\cdot}ksize.height}\begin{bmatrix}
-{1}&{1}&{\cdots}&{1}\\
-{1}&{1}&{\cdots}&{1}\\
-{\vdots}&{\vdots}&{\ddots}&{\vdots}\\
-{1}&{1}&{\cdots}&{1}\\
-\end{bmatrix}
-$$
+![\frac{1}{ksize.width{\cdot}ksize.height}\begin{bmatrix} {1}&{1}&{\cdots}&{1}\\ {1}&{1}&{\cdots}&{1}\\ {\vdots}&{\vdots}&{\ddots}&{\vdots}\\ {1}&{1}&{\cdots}&{1}\\ \end{bmatrix}](http://latex.codecogs.com/gif.latex?%5Cfrac%7B1%7D%7Bksize.width%7B%5Ccdot%7Dksize.height%7D%5Cbegin%7Bbmatrix%7D%20%7B1%7D%26%7B1%7D%26%7B%5Ccdots%7D%26%7B1%7D%5C%5C%20%7B1%7D%26%7B1%7D%26%7B%5Ccdots%7D%26%7B1%7D%5C%5C%20%7B%5Cvdots%7D%26%7B%5Cvdots%7D%26%7B%5Cddots%7D%26%7B%5Cvdots%7D%5C%5C%20%7B1%7D%26%7B1%7D%26%7B%5Ccdots%7D%26%7B1%7D%5C%5C%20%5Cend%7Bbmatrix%7D)
 
 ### 中值滤波
 
