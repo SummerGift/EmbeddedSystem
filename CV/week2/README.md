@@ -83,6 +83,8 @@ Sobel operator：Sobel 算子通过计算水平和垂直方向上的一节差分
 k = cv2.getGaussianKernel(3,1.5)
 ```
 
+通过该函数生成的一维卷积核 k 已经进行过归一化处理。
+
 - 规模为`3*3`，方差为 1.5 的一维卷积核  k 为：
 
 ```
@@ -99,8 +101,6 @@ k = cv2.getGaussianKernel(3,1.5)
  [0.09474166 0.11831801 0.09474166]]
 ```
 
-如果要保持转换后图片的整体亮度不变，则卷积核中的权重和应为 1。
-
 ##### 高斯滤波加速
 
 对图像进行高斯滤波而言，假设滤波器半径为 r，我们常用的高斯模板则对于图像每个像素的算法复杂度是 O(r^2)。高斯滤波器的 kernel 是可分离的(separable)，也就是说，可以将 2D 的高斯 kernel 分解为两个 1D 的 kernel，先沿 x 方向对图像进行 1D 高斯 kernel 的卷积，然后沿 y 方向对图像进行 1D 的高斯 kernel 卷积，最后的结果和使用一个 2D 高斯 kernel 对图像卷积效果是一样的。这样一来，针对每个像素，滤波器的算法复杂度降为 O(r)。
@@ -115,10 +115,30 @@ k = cv2.getGaussianKernel(3,1.5)
 
 ## 特征描述算法
 
-### Harris Corner
+### What is a good feature point?
+#### Harris Corner
+- Very informational (Harris Corner Detector)
+- Rotation/Brightness resistance (Harris Corner Detector)
+- Scale resistance (Harris Corner Detector)
 
-### SIFT
+### What is the form of a feature point?
+- Physical in location
+- Abstract in formation (usually a vector) -> Feature Descriptor
 
-### HoG
+### How to get a feature point/descriptor?
+#### SIFT
+
+SIFT，即尺度不变特征变换（Scale-invariant feature transform，SIFT），是用于[图像处理](https://baike.baidu.com/item/%E5%9B%BE%E5%83%8F%E5%A4%84%E7%90%86/294902)领域的一种描述。这种描述具有尺度不变性，可在图像中检测出关键点，是一种局部特征描述子。
+
+SIFT 特征是基于物体上的一些局部外观的兴趣点而与影像的大小和旋转无关。对于光线、噪声、微视角改变的容忍度也相当高。基于这些特性，它们是高度显著而且相对容易撷取，在母数庞大的特征数据库中，很容易辨识物体而且鲜有误认。使用 SIFT 特征描述对于部分物体遮蔽的侦测率也相当高，甚至只需要 3 个以上的 SIFT 物体特征就足以计算出位置与方位。在现今的电脑硬件速度下和小型的特征数据库条件下，辨识速度可接近即时运算。SIFT 特征的信息量大，适合在海量数据库中快速准确匹配。
+
+1. Generate Scale-space: DoG (Difference of Gaussian)
+2. Scale-space Extrema Detection
+3. Accurate Keypoint Localization
+4. Eliminating Edge Responses
+5. Orientation Assignment
+6. Keypoint Descriptor
+
+#### HoG
 
 
