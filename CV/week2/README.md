@@ -2,6 +2,10 @@
 
 在浏览器添加  [MathJax Plugin for Github](https://chrome.google.com/webstore/detail/mathjax-plugin-for-github/ioemnmodlmafdkllaclgeombjnmnbima) 插件可以使得数学公式正常渲染。
 
+## 源代码
+
+- [Implementation of median filtering](medianblur.py)
+
 ## 基本概念
 
 ### 图像就是函数
