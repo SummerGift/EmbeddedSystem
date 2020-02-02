@@ -34,7 +34,6 @@ def gradient_function(theta, x_array, y_array):
 
 
 def train_func(x_array, y_array, lr):
-
     # init the plot
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
@@ -46,7 +45,11 @@ def train_func(x_array, y_array, lr):
 
     theta = np.array([1, 1]).reshape(2, 1)
     gradient = gradient_function(theta, x_array, y_array)
-    while not all(abs(gradient) <= 0.01):
+
+    # if direction gradient of cost func <= 0.1, then stop
+    while not all(abs(gradient) <= 0.2):
+        print(gradient)
+
         theta = theta - lr * gradient
         gradient = gradient_function(theta, x_array, y_array)
 
@@ -79,10 +82,8 @@ def plot_result(x_array, y_array, theta):
 x_list_init, y_list_init = gen_sample_data()
 x_list = np.array(x_list_init).reshape(len(x_list_init), 1)
 y_list = np.array(y_list_init).reshape(len(y_list_init), 1)
-X0 = np.ones((len(x_list), 1))    # 生成一个m行1列的向量，也就是x0，全是1
-x_list = np.hstack((X0, x_list))  # 按照列堆叠形成数组，其实就是样本数据
+X0 = np.ones((len(x_list), 1))  # Generate a vector of m rows and 1 column, which is x0, which is all 1
+x_list = np.hstack((X0, x_list))
 
-learn_rate = 0.001
-
+learn_rate = 0.001618
 trained_theta = train_func(x_list, y_list, learn_rate)
-
