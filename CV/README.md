@@ -17,3 +17,7 @@
     - [Orb](http://www.willowgarage.com/sites/default/files/orb_final.pdf):  [Compulsory for SLAM Guys]
 
     - K-Means
+
+- [week3 Machine learning basics](week3)
+    - Linear regression in Python
+    - Logistic regression in Python
