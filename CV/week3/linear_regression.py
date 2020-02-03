@@ -81,7 +81,7 @@ def main():
     x_list = np.hstack((add_column_with_1, x_list))
 
     # set init learn rate
-    learn_rate = 0.001384
+    learn_rate = 0.001382
     trained_theta = train_func(x_list, y_list, learn_rate)
 
 
