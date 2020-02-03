@@ -34,10 +34,12 @@ def gradient_function(theta, x_array, y_array):
 
 
 def train_func(x_array, y_array, lr):
-    # init the plot
+    # init figure
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1)
-    plt.ion()  # change to interactive mode
+
+    # change to interactive mode
+    plt.ion()
     ax.scatter(x_list_init, y_list_init, s=30, c="red", marker="s")
     plt.xlabel("X")
     plt.ylabel("Y")
@@ -48,14 +50,13 @@ def train_func(x_array, y_array, lr):
 
     # if direction gradient of cost func <= 0.1, then stop
     while not all(abs(gradient) <= 0.2):
-        print(gradient)
-
+        # calculate new coefficient of cost function
         theta = theta - lr * gradient
         gradient = gradient_function(theta, x_array, y_array)
 
         # theta and cost log
         print("final_theta:", theta[0][0], theta[1][0])
-        print('cost function:', cost_function(theta, x_list, y_list)[0][0])
+        print('cost function:', cost_function(theta, x_array, y_array)[0][0])
 
         # update plot
         y = theta[0][0] + theta[1][0] * x
@@ -67,23 +68,22 @@ def train_func(x_array, y_array, lr):
     return theta
 
 
-def plot_result(x_array, y_array, theta):
-    ax = plt.subplot(111)
-    ax.scatter(x_array, y_array, s=30, c="red", marker="s")
-    plt.xlabel("X")
-    plt.ylabel("Y")
-
-    x = np.arange(0, len(x_array), 0.2)
-    y = theta[0][0] + theta[1][0] * x
-    ax.plot(x, y)
-    plt.show()
-
-
+# generate train data
 x_list_init, y_list_init = gen_sample_data()
-x_list = np.array(x_list_init).reshape(len(x_list_init), 1)
-y_list = np.array(y_list_init).reshape(len(y_list_init), 1)
-X0 = np.ones((len(x_list), 1))  # Generate a vector of m rows and 1 column, which is x0, which is all 1
-x_list = np.hstack((X0, x_list))
 
-learn_rate = 0.001618
-trained_theta = train_func(x_list, y_list, learn_rate)
+
+def main():
+    x_list = np.array(x_list_init).reshape(len(x_list_init), 1)
+    y_list = np.array(y_list_init).reshape(len(y_list_init), 1)
+
+    # Generate a vector of m rows and 1 column, which is x0, which is all 1
+    add_column_with_1 = np.ones((len(x_list), 1))
+    x_list = np.hstack((add_column_with_1, x_list))
+
+    # set init learn rate
+    learn_rate = 0.001384
+    trained_theta = train_func(x_list, y_list, learn_rate)
+
+
+if __name__ == "__main__":
+    main()
