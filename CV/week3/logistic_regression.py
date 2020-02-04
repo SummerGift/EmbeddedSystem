@@ -17,6 +17,30 @@ def load_data(filename):
     return x_array, y_array
 
 
+# Verify the accuracy of the model
+def validation_predictions(x_array, y_array, coefficient):
+    right_count = 0
+    right_flag = "false"
+    pre_value = 0
+
+    predict_values = 1 / (1 + np.exp(-x_array * coefficient))
+    print("\nPrediction validation:")
+    for i in range(len(y_array)):
+        if predict_values[i] < 0.5:
+            pre_value = 0
+        else:
+            pre_value = 1
+
+        right_flag = "false"
+        if pre_value == y_array[i]:
+            right_count += 1
+            right_flag = "right"
+
+        print("pre_value:", pre_value, ", true value:", y_array[i].astype(int), right_flag)
+
+    print('Prediction accuracy: {:.2f}%'.format(right_count / len(y_array) * 100))
+
+
 # Train Logistic Regression Model
 def model_train(x_array, y_array, alpha=0.001, max_iter=10001):
     # Initialization coefficient value
@@ -40,10 +64,11 @@ def model_train(x_array, y_array, alpha=0.001, max_iter=10001):
 
 def main():
     x_array, y_array = load_data('lr_data.txt')
-    print('x_array:', x_array, x_array.shape)
-    print('y_array:', y_array, y_array.shape)
+    # print('x_array:', x_array, x_array.shape)
+    # print('y_array:', y_array, y_array.shape)
     trained_w, w_save = model_train(x_array, y_array, 0.001, 10001)
-    print('trained_w:', trained_w)
+    print('\ntrained_w:', trained_w[0], trained_w[1], trained_w[2])
+    validation_predictions(x_array, y_array, trained_w)
 
     # show iteration process
     for wi in w_save:
@@ -61,6 +86,8 @@ def main():
         plt.title('iteration times : %s' % np.str(wi[1]))
         plt.pause(0.001)
     plt.show()
+
+
 
 
 if __name__ == "__main__":
