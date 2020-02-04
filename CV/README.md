@@ -1,10 +1,10 @@
 # Computer Vision
 
-- [week1 CV Basic Operations](week1)
+- [week1 CV Basic Ⅰ](week1)
 
     - crop, color shift, gamma, rotation, affine transform, perspective transform
 
-- [week2 CV Basic Operations](week2)
+- [week2 CV Basic Ⅱ](week2)
     - convolution, filtering, Harris Corner, SIFT and HOG
     - [optional] -  [Bilateral Filter](https://blog.csdn.net/piaoxuezhong/article/details/78302920) 
     - Feature Descriptors: [Compulsory] - [Hog](https://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf ) 
@@ -13,9 +13,7 @@
     - [Orb](http://www.willowgarage.com/sites/default/files/orb_final.pdf):  [Compulsory for SLAM Guys]
     - K-Means
 
-- [week3 Machine learning basics](week3)
-    - Supervised Learning
-        - Linear regression
-        - Logistic regression
-    - Unsupervised Learning
+- [week3 Classic Machine Learning Ⅰ](week3)
+    - Linear regression
+    - Logistic regression
 

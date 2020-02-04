@@ -28,25 +28,15 @@ def cost_function(theta, x_array, y_array):
 
 # get gradient value of the cost function
 def gradient_function(theta, x_array, y_array):
-    m = len(x_array)
     diff = np.dot(x_array, theta) - y_array  # sum of all predict value - true value
-    return (1 / m) * np.dot(x_array.transpose(), diff)
+    return (1 / len(x_array)) * np.dot(x_array.transpose(), diff)
 
 
 def train_func(x_array, y_array, lr):
-    # init figure
-    fig = plt.figure()
-    ax = fig.add_subplot(1, 1, 1)
-
-    # change to interactive mode
-    plt.ion()
-    ax.scatter(x_list_init, y_list_init, s=30, c="red", marker="s")
-    plt.xlabel("X")
-    plt.ylabel("Y")
-    x = np.arange(0, len(x_list_init), 0.2)
-
+    theta_save = []
     theta = np.array([1, 1]).reshape(2, 1)
     gradient = gradient_function(theta, x_array, y_array)
+    times = 1
 
     # if direction gradient of cost func <= 0.1, then stop
     while not all(abs(gradient) <= 0.2):
@@ -54,18 +44,11 @@ def train_func(x_array, y_array, lr):
         theta = theta - lr * gradient
         gradient = gradient_function(theta, x_array, y_array)
 
-        # theta and cost log
-        print("final_theta:", theta[0][0], theta[1][0])
-        print('cost function:', cost_function(theta, x_array, y_array)[0][0])
+        if times % 50 == 0:
+            theta_save.append([theta.copy(), times])
 
-        # update plot
-        y = theta[0][0] + theta[1][0] * x
-        ax.plot(x, y)
-        plt.pause(0.001)
-
-    plt.ioff()
-    plt.show()
-    return theta
+        times += 1
+    return theta, theta_save
 
 
 # generate train data
@@ -82,7 +65,25 @@ def main():
 
     # set init learn rate
     learn_rate = 0.001382
-    trained_theta = train_func(x_list, y_list, learn_rate)
+    trained_theta, theta_saved = train_func(x_list, y_list, learn_rate)
+    print("trained_theta:\n", trained_theta)
+    x = np.arange(0, len(x_list_init), 0.2)
+
+    for theta in theta_saved:
+        plt.clf()
+        cost_value = cost_function(np.array(theta[0]).reshape(2, 1), x_list, y_list)[0][0]
+        print("theta:", theta[0][0], theta[0][1], "times: ", theta[1], "cost: ", cost_value)
+
+        # update plot
+        y = theta[0][0] + theta[0][1] * x
+        plt.scatter(x_list_init, y_list_init, s=30, c="red", marker="s")
+        plt.xlabel("X")
+        plt.ylabel("Y")
+        plt.plot(x, y)
+        plt.title('iteration times : %s' % theta[1])
+        plt.pause(0.001)
+
+    plt.show()
 
 
 if __name__ == "__main__":
