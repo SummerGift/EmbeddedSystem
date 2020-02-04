@@ -51,15 +51,13 @@ def train_func(x_array, y_array, lr):
     return theta, theta_save
 
 
-# generate train data
-x_list_init, y_list_init = gen_sample_data()
-
-
 def main():
+    # generate train data
+    x_list_init, y_list_init = gen_sample_data()
     x_list = np.array(x_list_init).reshape(len(x_list_init), 1)
     y_list = np.array(y_list_init).reshape(len(y_list_init), 1)
 
-    # Generate a vector of m rows and 1 column, which is x0, which is all 1
+    # Generate a vector of m rows and 1 column, which is add_column_with_1, which is all 1
     add_column_with_1 = np.ones((len(x_list), 1))
     x_list = np.hstack((add_column_with_1, x_list))
 
@@ -70,16 +68,19 @@ def main():
     x = np.arange(0, len(x_list_init), 0.2)
 
     for theta in theta_saved:
-        plt.clf()
+        # calculate cost value
         cost_value = cost_function(np.array(theta[0]).reshape(2, 1), x_list, y_list)[0][0]
         print("theta:", theta[0][0], theta[0][1], "times: ", theta[1], "cost: ", cost_value)
 
         # update plot
+        plt.clf()
         y = theta[0][0] + theta[0][1] * x
         plt.scatter(x_list_init, y_list_init, s=30, c="red", marker="s")
         plt.xlabel("X")
         plt.ylabel("Y")
-        plt.plot(x, y)
+        plt.plot(x, y, label='fitting equation')
+        plt.grid()
+        plt.legend()
         plt.title('iteration times : %s' % theta[1])
         plt.pause(0.001)
 
