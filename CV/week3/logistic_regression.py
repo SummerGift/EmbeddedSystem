@@ -36,7 +36,7 @@ def validation_predictions(x_array, y_array, coefficient):
             right_count += 1
             right_flag = "right"
 
-        print("pre_value:", pre_value, ", true value:", y_array[i].astype(int), right_flag)
+        print("instance {0} :".format(i), "pre_value:", pre_value, ", true value:", y_array[i].astype(int), right_flag)
 
     print('Prediction accuracy: {:.2f}%'.format(right_count / len(y_array) * 100))
 
