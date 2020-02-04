@@ -4,5 +4,15 @@
 
 - [Linear regression in Python](linear_regression.py)
 
+  ![Linear regression](assets/Linear regression.png)
+
 - [Logistic regression in Python](logistic_regression.py)
 
+  ![Logistic regression](assets/Logistic regression.png)
+
+
+## Gradient descent
+
+## Linear regression with Gradient descent
+
+## Logistic regression with Gradient descent
