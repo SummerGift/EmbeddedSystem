@@ -17,3 +17,8 @@
     - Linear regression
     - Logistic regression
 
+- [week4 Classic Machine Learning Ⅱ](week4)
+    - Neural Network
+    - Back Propagation
+    - Regularization
+
