@@ -39,6 +39,7 @@ def sigmoid(w1, w2, b, x):
 
 # cost function
 def eval_loss(w1, w2, b, x, y):
+    # 根据逻辑回归 loss 值计算公式计算 loss 值
     loss = -(y * np.log(sigmoid(w1, w2, b, x)) + \
              (1 - y) * np.log(1 - sigmoid(w1, w2, b, x)))
     return np.mean(loss)
