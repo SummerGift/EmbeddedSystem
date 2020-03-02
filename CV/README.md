@@ -17,12 +17,21 @@
 
 - [week3 Classic Machine Learning Ⅰ](week3)
     - Linear regression
-    - Logistic regression
+    - Logistic Regression / Classification
+    - L2 Loss
+    - Sigmoid Function
+    - Cross Entropy / Multi-Label
 
 - [week4 Classic Machine Learning Ⅱ](week4)
     - Neural Network
-    - Back Propagation
-    - Regularization
+    - BP / Cost Function / Hypothesis
+    - L1 / L2 Regularization
+    - Overfit / Zigzag
+
+- [week5 Classic Machine Learning Ⅲ](week5)
+    - Gradient Vanishing / Explosion
+    - SVM / Kernel / Derivation
+    - Normal Equation
 
 ## Project
 
