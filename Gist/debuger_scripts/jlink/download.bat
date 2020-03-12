@@ -1,0 +1,1 @@
+JLink.exe -device STM32F429BI -if SWD -speed 4000 -CommanderScript ./download.JLinkScript
