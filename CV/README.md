@@ -32,6 +32,14 @@
     - Gradient Vanishing / Explosion
     - SVM / Kernel / Derivation
     - Normal Equation
+ 
+- [week6 CNN Ⅰ](week6)
+    - Conv: Conv, Dilated Conv, Transposed Conv, C3d(Deformable Conv)
+    - ReLU: ReLU, Leaky-ReLU, PReLU, ELU(SeLU)
+    - Pooling: Max Pooling, Axe Pooling
+    - FC
+    - Dropout
+    - Batch Normalization(Group/Layer/Instance Norm)
 
 ## Project
 
