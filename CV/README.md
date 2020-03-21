@@ -41,6 +41,10 @@
     - Dropout
     - Batch Normalization(Group/Layer/Instance Norm)
 
+- [week7 CNN Ⅱ](week7)
+    - Net Framework
+    - FLOPs
+
 ## Project
 
 - [project1 Object Detection](prj_object_detection)
