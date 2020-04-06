@@ -236,11 +236,3 @@ def generate_random_crops(shape, rects, random_times):
             random_rect_cnt += 1
             random_rects.append(random_rect)
     return random_rects
-
-
-def main():
-    print("hello")
-
-
-if __name__ == "__main__":
-    main()
