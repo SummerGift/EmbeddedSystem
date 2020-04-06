@@ -47,7 +47,7 @@
 
 ## Project
 
-- [project1 Object Detection](prj_object_detection)
+- [project1 Object Detection](project_one_object_detection)
     - SIFT, SURF
     - FLANN
     - KNN
