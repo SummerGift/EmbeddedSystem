@@ -9,8 +9,7 @@ import copy
 
 
 class GenerateTrainDataset:
-    def __init__(self, source_file, folder_list):
-        self.lines = source_file
+    def __init__(self, folder_list):
         self.folder_list = folder_list
 
     def load_metadata(self):
@@ -44,7 +43,7 @@ class GenerateTrainDataset:
         return images
 
     @staticmethod
-    def load_truth(self, lines):
+    def load_truth(lines):
         truth = {}
         for line in lines:
             line = line.strip().split()
@@ -91,47 +90,45 @@ class GenerateTrainDataset:
         self.key_show(name, data)
         return name
 
+    # 检验扩增效果
+    def compare_show(self, data1, data2):
+        names = []
+        for key in data1:
+            if key not in names:
+                names.append(key)
+        index = np.random.randint(0, len(names))
+        name = names[index]
+        self.key_show(name, data1)
+        self.key_show(name, data2)
 
-# 将人脸框扩大（默认0.25倍）；保证人脸框不超过图像大小
-def expand_roi(rect, img_width, img_height, ratio=0.25):
-    # 扩大框
-    x1, y1, x2, y2 = rect[0], rect[1], rect[2], rect[3]
-    width = x2 - x1 + 1
-    height = y2 - y1 + 1
-    padding_width = int(width * ratio)
-    padding_height = int(height * ratio)
-    x1 = x1 - padding_width
-    y1 = y1 - padding_height
-    x2 = x2 + padding_width
-    y2 = y2 + padding_height
-    # 保证不超过图像
-    x1 = 0 if x1 < 0 else x1
-    y1 = 0 if y1 < 0 else y1
-    x2 = img_width - 1 if x2 >= img_width else x2
-    y2 = img_height - 1 if y2 >= img_height else y2
-    rect[0], rect[1], rect[2], rect[3] = x1, y1, x2, y2
+    # 将人脸框扩大（默认0.25倍）；保证人脸框不超过图像大小
+    @staticmethod
+    def expand_roi(rect, img_width, img_height, ratio=0.25):
+        # 扩大框
+        x1, y1, x2, y2 = rect[0], rect[1], rect[2], rect[3]
+        width = x2 - x1 + 1
+        height = y2 - y1 + 1
+        padding_width = int(width * ratio)
+        padding_height = int(height * ratio)
+        x1 = x1 - padding_width
+        y1 = y1 - padding_height
+        x2 = x2 + padding_width
+        y2 = y2 + padding_height
+        # 保证不超过图像
+        x1 = 0 if x1 < 0 else x1
+        y1 = 0 if y1 < 0 else y1
+        x2 = img_width - 1 if x2 >= img_width else x2
+        y2 = img_height - 1 if y2 >= img_height else y2
+        rect[0], rect[1], rect[2], rect[3] = x1, y1, x2, y2
 
-
-def change_data_rect(data):
-    for key in data:
-        img = plt.imread(key)
-        img_h, img_w = img.shape[:2]
-        value = data[key]
-        for i in range(len(value)):
-            expand_roi(value[i][0], img_w, img_h)
-    return data
-
-
-# 检验扩增效果
-def compare_show(data1, data2):
-    names = []
-    for key in data1:
-        if key not in names:
-            names.append(key)
-    index = np.random.randint(0, len(names))
-    name = names[index]
-    key_show(name, data1)
-    key_show(name, data2)
+    def change_data_rect(self, data):
+        for key in data:
+            img = plt.imread(key)
+            img_h, img_w = img.shape[:2]
+            value = data[key]
+            for i in range(len(value)):
+                self.expand_roi(value[i][0], img_w, img_h)
+        return data
 
 
 # 人脸关键点坐标变更 landmarks -= np.array([roi x1,roi y1])
@@ -256,15 +253,16 @@ def data_key_show(key, data):
 
 
 def main():
-    # folder_list = ['I', 'II']
-    # res_lines = load_metadata(folder_list)
-    # truth = load_truth(res_lines)
-    # # 先深度拷贝再进行函数处理，避免原数据更改，便于调试
-    # data_change_rect = copy.deepcopy(truth)
-    # data_change_rect = change_data_rect(data_change_rect)
-    #
-    # # compare_show(truth, data_change_rect)
-    #
+    folder_list = ['I', 'II']
+    data_set = GenerateTrainDataset(folder_list)
+    data_lines = data_set.load_metadata()
+    data_truth = data_set.load_truth(data_lines)
+
+    # 先深度拷贝再进行函数处理，避免原数据更改，便于调试
+    data_change_rect = copy.deepcopy(data_truth)
+    data_change_rect = data_set.change_data_rect(data_change_rect)
+    data_set.compare_show(data_truth, data_change_rect)
+
     # # 先深度拷贝再进行函数处理，避免原数据更改，便于调试
     # data_change_landmarks = copy.deepcopy(data_change_rect)
     # data_change_landmarks, delete_value1, delete_value2 = change_data_landmarks(data_change_landmarks)
@@ -280,10 +278,10 @@ def main():
     # write_txt(train, "train.txt")
     # write_txt(test, "test.txt")
 
-    train = load_data("train.txt")
-    print(len(train))
-    data_show(train)
-    print("done")
+    # train = load_data("train.txt")
+    # print(len(train))
+    # data_show(train)
+    # print("done")
 
 
 if __name__ == '__main__':
