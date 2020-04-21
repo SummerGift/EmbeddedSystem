@@ -1,9 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from PIL import Image
-import torch
-from torchvision import transforms
-from torch.utils.data import Dataset
 import os
 import copy
 
@@ -43,7 +39,8 @@ class GenerateTrainDataset:
         return images
 
     @staticmethod
-    def load_truth(lines):
+    def change_data_format(lines):
+        """process metadata to new format {‘图片地址’：[(边框1，关键点1),(边框2，关键点2)...]}"""
         truth = {}
         for line in lines:
             line = line.strip().split()
@@ -121,7 +118,7 @@ class GenerateTrainDataset:
         y2 = img_height - 1 if y2 >= img_height else y2
         rect[0], rect[1], rect[2], rect[3] = x1, y1, x2, y2
 
-    def change_data_rect(self, data):
+    def expand_figure_rect(self, data):
         for key in data:
             img = plt.imread(key)
             img_h, img_w = img.shape[:2]
@@ -130,158 +127,167 @@ class GenerateTrainDataset:
                 self.expand_roi(value[i][0], img_w, img_h)
         return data
 
+    # 数据类型转换
+    @staticmethod
+    def trans_value(key, value):
+        rect = ''
+        for r in value[0]:
+            rect += ' ' + str(r)
+        landmarks = ''
+        for lms in value[1]:
+            landmark = ''
+            for lm in lms:
+                landmark += ' ' + str(lm)
+            landmarks += landmark
+        line = key + rect + landmarks
+        return line
 
-# 人脸关键点坐标变更 landmarks -= np.array([roi x1,roi y1])
-def change_data_landmarks(data):
-    delete_value1 = {}
-    delete_value2 = {}
-    delete_key = []
-    for key in data:
+    # 样本个数train：test=8:2，即train有1570个，test有392个
+    @staticmethod
+    def generate_train_test_data(self, data, rate=4):
+        lines = []
+        for key in data:
+            values = data[key]
+            for i in range(len(values)):
+                line = self.trans_value(key, values[0])
+                lines.append(line)
+                values.remove(values[0])
+        number = len(lines)
+        train = lines[:int(number * (4 / 5))]
+        test = lines[int(number * (4 / 5)):]
+        return train, test, lines
+
+    def load_data(self, path):
+        """load valid dataset"""
+        lines = []
+        with open(path) as f:
+            lines = f.readlines()
+        data = self.change_data_format(lines)
+        return data
+
+    @staticmethod
+    def data_key_show(key, data):
+        # 读取原图像
+        img = plt.imread(key)
         value = data[key]
-        deletes1 = []
-        deletes2 = []
-        for i in range(len(value)):
-            r = np.array([value[i][0][0], value[i][0][1]])
-            w = value[i][0][2] - value[i][0][0]
-            h = value[i][0][3] - value[i][0][1]
-            for j in range(len(value[i][1])):
-                value[i][1][j] -= r
-                if value[i][1][j][0] < 0 or value[i][1][j][1] < 0:
-                    deletes1.append(value[i])
-                    break
-                if value[i][1][j][0] > w or value[i][1][j][1] > h:
-                    deletes2.append(value[i])
-                    break
-        if len(deletes1) != 0:
-            delete_value1[key] = []
-            for delete in deletes1:
-                value.remove(delete)
-                delete_value1[key].append(delete)
-        if len(deletes2) != 0:
-            delete_value2[key] = []
-            for delete in deletes2:
-                value.remove(delete)
-                delete_value2[key].append(delete)
-        if len(value) == 0:
-            delete_key.append(key)
-    for key in delete_key:
-        del data[key]
+        print("value", value)
+        num = len(value)
+        fig = plt.figure(figsize=(10, 10))
+        axes = fig.subplots(nrows=1, ncols=num)
+        for i in range(num):
+            # 画出截图头像
+            crop = value[i][0]
+            crop_img = img[crop[1]:crop[3], crop[0]:crop[2]]
+            if num == 1:
+                ax = axes
+            else:
+                ax = axes[i]
+            ax.imshow(crop_img)
+            # 画出关键点
+            landmarks = np.array(value[i][1])
+            ax.scatter(landmarks[:, 0], landmarks[:, 1], s=5, c='r')
+        plt.show()
 
-    return data, delete_value1, delete_value2
+    # 随机选取样本画图
+    def data_show_face_rect(self, data):
+        # 随机选取
+        names = []
+        for key in data:
+            names.append(key)
+        index = np.random.randint(0, len(names))
+        name = names[index]
+        print(name)
+        self.data_key_show(name, data)
 
+    # 人脸关键点坐标变更 landmarks -= np.array([roi x1,roi y1])
+    # 将关键点的坐标改为相对于人脸框的坐标，也就是减去人脸框左上角的坐标
+    @staticmethod
+    def change_data_landmarks(data):
+        delete_value1 = {}
+        delete_value2 = {}
+        delete_key = []
+        for key in data:
+            value = data[key]
+            deletes1 = []
+            deletes2 = []
 
-# 数据类型转换
-def trans_value(key, value):
-    rect = ''
-    for r in value[0]:
-        rect += ' ' + str(r)
-    landmarks = ''
-    for lms in value[1]:
-        landmark = ''
-        for lm in lms:
-            landmark += ' ' + str(lm)
-        landmarks += landmark
-    line = line = key + rect + landmarks
-    return line
+            for i in range(len(value)):
+                r = np.array([value[i][0][0], value[i][0][1]])
+                w = value[i][0][2] - value[i][0][0]
+                h = value[i][0][3] - value[i][0][1]
 
+                for j in range(len(value[i][1])):
+                    value[i][1][j] -= r
 
-# 样本个数train：test=8:2，即train有1570个，test有392个
-def gen_data(data, rate=4):
-    lines = []
-    for key in data:
-        values = data[key]
-        for i in range(len(values)):
-            line = trans_value(key, values[0])
-            lines.append(line)
-            values.remove(values[0])
-    number = len(lines)
-    train = lines[:int(number * (4 / 5))]
-    test = lines[int(number * (4 / 5)):]
-    return train, test, lines
+                    if value[i][1][j][0] < 0 or value[i][1][j][1] < 0:
+                        deletes1.append(value[i])
+                        break
 
+                    if value[i][1][j][0] > w or value[i][1][j][1] > h:
+                        deletes2.append(value[i])
+                        break
 
-# record train/test.txt file
-def write_txt(data, path):
-    with open(path, "w") as f:
-        for d in data:
-            f.write(d + '\n')
-    print('File %s is ready!' % path)
+            if len(deletes1) != 0:
+                delete_value1[key] = []
+                for delete in deletes1:
+                    value.remove(delete)
+                    delete_value1[key].append(delete)
 
+            if len(deletes2) != 0:
+                delete_value2[key] = []
+                for delete in deletes2:
+                    value.remove(delete)
+                    delete_value2[key].append(delete)
 
-# 读取生成的数据
-def load_data(path):
-    lines = []
-    with open(path) as f:
-        lines = f.readlines()
-    data = load_truth(lines)
-    return data
+            if len(value) == 0:
+                delete_key.append(key)
 
+        for key in delete_key:
+            del data[key]
 
-# 随机选取样本画图
-def data_show(data):
-    # 随机选取
-    names = []
-    for key in data:
-        names.append(key)
-    index = np.random.randint(0, len(names))
-    name = names[index]
-    print(name)
-    data_key_show(name, data)
+        return data, delete_value1, delete_value2
 
-
-def data_key_show(key, data):
-    # 读取原图像
-    img = plt.imread(key)
-    value = data[key]
-    print("value", value)
-    num = len(value)
-    fig = plt.figure(figsize=(10, 10))
-    axes = fig.subplots(nrows=1, ncols=num)
-    for i in range(num):
-        # 画出截图头像
-        crop = value[i][0]
-        crop_img = img[crop[1]:crop[3], crop[0]:crop[2]]
-        if num == 1:
-            ax = axes
-        else:
-            ax = axes[i]
-        ax.imshow(crop_img)
-        # 画出关键点
-        landmarks = np.array(value[i][1])
-        ax.scatter(landmarks[:, 0], landmarks[:, 1], s=5, c='r')
-    plt.show()
+    @staticmethod
+    def save_dataset(data, path):
+        """save train/test.txt file to FS"""
+        with open(path, "w") as f:
+            for d in data:
+                f.write(d + '\n')
+        print('Save {0} successfully!'.format(path))
 
 
 def main():
     folder_list = ['I', 'II']
     data_set = GenerateTrainDataset(folder_list)
-    data_lines = data_set.load_metadata()
-    data_truth = data_set.load_truth(data_lines)
 
-    # 先深度拷贝再进行函数处理，避免原数据更改，便于调试
-    data_change_rect = copy.deepcopy(data_truth)
-    data_change_rect = data_set.change_data_rect(data_change_rect)
-    data_set.compare_show(data_truth, data_change_rect)
+    # 1. load metadata
+    # meta_data = data_set.load_metadata()
 
-    # # 先深度拷贝再进行函数处理，避免原数据更改，便于调试
-    # data_change_landmarks = copy.deepcopy(data_change_rect)
-    # data_change_landmarks, delete_value1, delete_value2 = change_data_landmarks(data_change_landmarks)
-    #
-    # print(data_change_landmarks, delete_value1, delete_value2)
-    #
-    # check_show(delete_value2)
-    #
+    # 2. change metadata to new format
+    # data = data_set.change_data_format(meta_data)
+
+    # 3. expand face box
+    # data_expand_rect = copy.deepcopy(data)
+    # data_expand_rect = data_set.expand_figure_rect(data_expand_rect)
+    # data_set.compare_show(data, data_expand_rect)
+
+    # 4. change key point base on rect
+    # data_change_landmarks = copy.deepcopy(data_expand_rect)
+    # data_change_landmarks, delete_value1, delete_value2 = data_set.change_data_landmarks(data_change_landmarks)
+    # data_set.check_show(delete_value2)
+    # print(len(data_change_landmarks), len(delete_value1), len(delete_value2))
+
+    # 5. generate train and test dataset
     # data = copy.deepcopy(data_change_landmarks)
-    # train, test, lines = gen_data(data)
-    # print(len(train), len(test), len(lines))
+    # train_dataset, test_dataset, lines = data_set.generate_train_test_data(data)
+    # print(len(train_dataset), len(test_dataset), len(lines))
+    # data_set.write_txt(train_dataset, "train_dataset.txt")
+    # data_set.write_txt(test_dataset, "test_dataset.txt")
 
-    # write_txt(train, "train.txt")
-    # write_txt(test, "test.txt")
-
-    # train = load_data("train.txt")
-    # print(len(train))
-    # data_show(train)
-    # print("done")
+    # 6. load train dataset and check them
+    train = data_set.load_data("train_dataset.txt")
+    data_set.data_show_face_rect(train)
+    print("Run done.")
 
 
 if __name__ == '__main__':

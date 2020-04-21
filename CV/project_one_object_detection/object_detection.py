@@ -14,6 +14,13 @@ sift = cv2.xfeatures2d.SIFT_create()
 kp1, des1 = sift.detectAndCompute(template, None)
 kp2, des2 = sift.detectAndCompute(target, None)
 
+print(kp1)
+
+for key in kp1:
+    print
+
+print(type(kp1))
+
 # 创建设置 FLANN 匹配
 FLANN_INDEX_KDTREE = 0
 index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
