@@ -24,13 +24,13 @@ class GenerateTrainDataset:
 
     @staticmethod
     def remove_invalid_image(lines):
+        """Get rid of the faces of people whose coordinates are out of bounds."""
         images = []
         for line in lines:
             line_ = line.split()
             name = line_[0]
             rect = list(map(int, list(map(float, line_[1:5]))))
             landm = list(map(float, line_[5:]))
-            # 去掉坐标越界的人脸
             rect = np.array(rect)
             landm = np.array(landm)
             if (rect >= 0).all() == False or (landm >= 0).all() == False:
@@ -41,7 +41,10 @@ class GenerateTrainDataset:
 
     @staticmethod
     def change_data_format(lines):
-        """process metadata to new format {‘图片地址’：[(边框1，关键点1),(边框2，关键点2)...]}"""
+        """
+        process metadata to new format:
+        {'image address': [(border 1, keypoint 1),(border 2, keypoint 2)...]}.
+        """
         truth = {}
         for line in lines:
             line = line.strip().split()
@@ -57,13 +60,13 @@ class GenerateTrainDataset:
 
     @staticmethod
     def rect_trans(rect):
-        """将显示框线的四个值转换为坐标点"""
+        """Convert the four values of the display box line to coordinate points."""
         r_x = np.array([rect[0], rect[0], rect[2], rect[2], rect[0]])
         r_y = np.array([rect[1], rect[3], rect[3], rect[1], rect[1]])
         return r_x, r_y
 
     def key_show(self, key_name, data):
-        """show specific picture"""
+        """show specific picture."""
         img = plt.imread(key_name)
         fig = plt.figure(figsize=(10, 10))
         ax = fig.subplots()
@@ -78,7 +81,7 @@ class GenerateTrainDataset:
         plt.show()
 
     def check_show(self, data):
-        """show picture randomly"""
+        """show picture randomly."""
         names = []
         for key in data:
             if key not in names:
@@ -89,7 +92,7 @@ class GenerateTrainDataset:
         return name
 
     def compare_show(self, data1, data2):
-        """检验扩增效果"""
+        """Test the amplification effect."""
         names = []
         for key in data1:
             if key not in names:
@@ -101,7 +104,10 @@ class GenerateTrainDataset:
 
     @staticmethod
     def expand_roi(rect, img_width, img_height, ratio=0.25):
-        """将人脸框扩大（默认0.25倍）；保证人脸框不超过图像大小"""
+        """
+        Expand the face frame (default 0.25x),
+        make sure the face frame does not exceed the image size.
+        """
         x1, y1, x2, y2 = rect[0], rect[1], rect[2], rect[3]
         width = x2 - x1 + 1
         height = y2 - y1 + 1
@@ -111,7 +117,8 @@ class GenerateTrainDataset:
         y1 = y1 - padding_height
         x2 = x2 + padding_width
         y2 = y2 + padding_height
-        # 保证不超过图像
+
+        # Guaranteed not to exceed the image
         x1 = 0 if x1 < 0 else x1
         y1 = 0 if y1 < 0 else y1
         x2 = img_width - 1 if x2 >= img_width else x2
@@ -129,7 +136,7 @@ class GenerateTrainDataset:
 
     @staticmethod
     def trans_value(key, value):
-        """change the data type"""
+        """change the data type."""
         rect = ''
         for r in value[0]:
             rect += ' ' + str(r)
@@ -144,7 +151,7 @@ class GenerateTrainDataset:
 
     @staticmethod
     def generate_train_test_data(self, data, rate=4):
-        """number train/test is 4/1"""
+        """number train/test is 4/1."""
         lines = []
         for key in data:
             values = data[key]
@@ -158,7 +165,7 @@ class GenerateTrainDataset:
         return train, test, lines
 
     def load_data(self, file):
-        """load valid dataset from file"""
+        """load valid dataset from file."""
         lines = []
         with open(file) as f:
             lines = f.readlines()
@@ -166,7 +173,7 @@ class GenerateTrainDataset:
 
     @staticmethod
     def data_key_show(key, data):
-        # read origin figure data
+        """show specific figure."""
         logging.info("figure path: {0}".format(key))
         img = plt.imread(key)
         value = data[key]
@@ -193,7 +200,7 @@ class GenerateTrainDataset:
         plt.show()
 
     def data_show_face_rect(self, data):
-        """随机选取样本画图展示"""
+        """Randomly selected sample drawings to show."""
         names = []
         for key in data:
             names.append(key)
@@ -204,8 +211,9 @@ class GenerateTrainDataset:
     @staticmethod
     def change_data_landmarks(data):
         """
-        人脸关键点坐标变更 landmarks -= np.array([roi x1,roi y1])
-        将关键点的坐标改为相对于人脸框的坐标，也就是减去人脸框左上角的坐标
+        Face key point coordinate change landmarks -= np.array([roi x1,roi y1])
+        Change the coordinates of the key point to the coordinates relative to the face box,
+        that is, subtract the coordinates of the upper left corner of the face box.
         """
         delete_value1 = {}
         delete_value2 = {}
@@ -253,7 +261,7 @@ class GenerateTrainDataset:
 
     @staticmethod
     def save_dataset(data, path):
-        """save train and test data to file"""
+        """save train and test data to file."""
         with open(path, "w") as f:
             for d in data:
                 f.write(d + '\n')
