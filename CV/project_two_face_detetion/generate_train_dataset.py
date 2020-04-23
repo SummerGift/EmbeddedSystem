@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import os
 import copy
+import logging
 
 
 class GenerateTrainDataset:
@@ -142,7 +143,7 @@ class GenerateTrainDataset:
         line = key + rect + landmarks
         return line
 
-    # 样本个数train：test=8:2，即train有1570个，test有392个
+    # 样本个数 train:test is 8:2
     @staticmethod
     def generate_train_test_data(self, data, rate=4):
         lines = []
@@ -162,20 +163,23 @@ class GenerateTrainDataset:
         lines = []
         with open(path) as f:
             lines = f.readlines()
-        data = self.change_data_format(lines)
-        return data
+        return self.change_data_format(lines)
 
     @staticmethod
     def data_key_show(key, data):
-        # 读取原图像
+        # read origin figure data
+        logging.info("figure path: {0}".format(key))
         img = plt.imread(key)
         value = data[key]
-        print("value", value)
+        logging.info("figure data: {0}".format(value))
+        logging.info("figure data len: {0}".format(len(value)))
         num = len(value)
         fig = plt.figure(figsize=(10, 10))
         axes = fig.subplots(nrows=1, ncols=num)
+
+        # plt every box then draw key points
         for i in range(num):
-            # 画出截图头像
+            # draw head box
             crop = value[i][0]
             crop_img = img[crop[1]:crop[3], crop[0]:crop[2]]
             if num == 1:
@@ -183,20 +187,19 @@ class GenerateTrainDataset:
             else:
                 ax = axes[i]
             ax.imshow(crop_img)
-            # 画出关键点
+
+            # draw key points
             landmarks = np.array(value[i][1])
             ax.scatter(landmarks[:, 0], landmarks[:, 1], s=5, c='r')
         plt.show()
 
     # 随机选取样本画图
     def data_show_face_rect(self, data):
-        # 随机选取
         names = []
         for key in data:
             names.append(key)
         index = np.random.randint(0, len(names))
         name = names[index]
-        print(name)
         self.data_key_show(name, data)
 
     # 人脸关键点坐标变更 landmarks -= np.array([roi x1,roi y1])
@@ -249,14 +252,25 @@ class GenerateTrainDataset:
 
     @staticmethod
     def save_dataset(data, path):
-        """save train/test.txt file to FS"""
+        """save train and test data to file"""
         with open(path, "w") as f:
             for d in data:
                 f.write(d + '\n')
         print('Save {0} successfully!'.format(path))
 
 
+def init_logger():
+    log_format = "%(module)s %(lineno)d %(levelname)s %(message)s "
+    date_format = '%Y-%m-%d  %H:%M:%S %a '
+    logging.basicConfig(level=logging.INFO,
+                        format=log_format,
+                        datefmt=date_format,
+                        )
+
+
 def main():
+    init_logger()
+
     folder_list = ['I', 'II']
     data_set = GenerateTrainDataset(folder_list)
 
@@ -286,8 +300,9 @@ def main():
 
     # 6. load train dataset and check them
     train = data_set.load_data("train_dataset.txt")
+
     data_set.data_show_face_rect(train)
-    print("Run done.")
+    logging.info("Run done.")
 
 
 if __name__ == '__main__':
