@@ -55,9 +55,9 @@ class GenerateTrainDataset:
             truth[name].append((rect, landmarks))
         return truth
 
-    # 将显示框线的四个值转换为坐标点
     @staticmethod
     def rect_trans(rect):
+        """将显示框线的四个值转换为坐标点"""
         r_x = np.array([rect[0], rect[0], rect[2], rect[2], rect[0]])
         r_y = np.array([rect[1], rect[3], rect[3], rect[1], rect[1]])
         return r_x, r_y
@@ -88,8 +88,8 @@ class GenerateTrainDataset:
         self.key_show(name, data)
         return name
 
-    # 检验扩增效果
     def compare_show(self, data1, data2):
+        """检验扩增效果"""
         names = []
         for key in data1:
             if key not in names:
@@ -99,10 +99,9 @@ class GenerateTrainDataset:
         self.key_show(name, data1)
         self.key_show(name, data2)
 
-    # 将人脸框扩大（默认0.25倍）；保证人脸框不超过图像大小
     @staticmethod
     def expand_roi(rect, img_width, img_height, ratio=0.25):
-        # 扩大框
+        """将人脸框扩大（默认0.25倍）；保证人脸框不超过图像大小"""
         x1, y1, x2, y2 = rect[0], rect[1], rect[2], rect[3]
         width = x2 - x1 + 1
         height = y2 - y1 + 1
@@ -128,9 +127,9 @@ class GenerateTrainDataset:
                 self.expand_roi(value[i][0], img_w, img_h)
         return data
 
-    # 数据类型转换
     @staticmethod
     def trans_value(key, value):
+        """change the data type"""
         rect = ''
         for r in value[0]:
             rect += ' ' + str(r)
@@ -143,9 +142,9 @@ class GenerateTrainDataset:
         line = key + rect + landmarks
         return line
 
-    # 样本个数 train:test is 8:2
     @staticmethod
     def generate_train_test_data(self, data, rate=4):
+        """number train/test is 4/1"""
         lines = []
         for key in data:
             values = data[key]
@@ -158,10 +157,10 @@ class GenerateTrainDataset:
         test = lines[int(number * (4 / 5)):]
         return train, test, lines
 
-    def load_data(self, path):
-        """load valid dataset"""
+    def load_data(self, file):
+        """load valid dataset from file"""
         lines = []
-        with open(path) as f:
+        with open(file) as f:
             lines = f.readlines()
         return self.change_data_format(lines)
 
@@ -193,8 +192,8 @@ class GenerateTrainDataset:
             ax.scatter(landmarks[:, 0], landmarks[:, 1], s=5, c='r')
         plt.show()
 
-    # 随机选取样本画图
     def data_show_face_rect(self, data):
+        """随机选取样本画图展示"""
         names = []
         for key in data:
             names.append(key)
@@ -202,10 +201,12 @@ class GenerateTrainDataset:
         name = names[index]
         self.data_key_show(name, data)
 
-    # 人脸关键点坐标变更 landmarks -= np.array([roi x1,roi y1])
-    # 将关键点的坐标改为相对于人脸框的坐标，也就是减去人脸框左上角的坐标
     @staticmethod
     def change_data_landmarks(data):
+        """
+        人脸关键点坐标变更 landmarks -= np.array([roi x1,roi y1])
+        将关键点的坐标改为相对于人脸框的坐标，也就是减去人脸框左上角的坐标
+        """
         delete_value1 = {}
         delete_value2 = {}
         delete_key = []
@@ -256,7 +257,6 @@ class GenerateTrainDataset:
         with open(path, "w") as f:
             for d in data:
                 f.write(d + '\n')
-        print('Save {0} successfully!'.format(path))
 
 
 def init_logger():
