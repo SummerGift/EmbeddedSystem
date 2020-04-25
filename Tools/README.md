@@ -20,6 +20,7 @@
 
 ## 编辑器
 
+### Pycharm
 一个好用的纯文本编辑器（当然也包括代码）非常重要，现在我使用 Pycharm 作为主力编辑器，下面列一下常用的编辑器快捷键:
 
 - 删除当前行 'ctrl + d'
@@ -30,7 +31,9 @@
 - 全工程搜索 'ctrl + shift + f'
 - 代码格式化 'ctrl + alt + l'
 - git commit 'ctrl + k'
+- git push 'shif + ctrl + k'
 
+### MarkDown
 
 - 非常好用的本地 MarkDown 编辑器：[Typora](https://www.typora.io/)，支持 md 格式向各种格式的轻松转换
 - 云端 MarkDown 编辑器：[Cmd MarkDown](https://www.zybuluo.com/mdeditor)，云端保存和搜索功能十分强大
