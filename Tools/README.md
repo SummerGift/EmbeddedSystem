@@ -37,6 +37,7 @@
 | 全局查找| CTRL + SHIFT + F | 
 | 代码格式化| CTRL + ALT + L  | 
 | git commit| CTRL + K  | 
+| git commit + push| CTRL + ALT + K  | 
 | git push| SHIFT + CTRL + K  | 
 
 ### MarkDown
