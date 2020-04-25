@@ -8,6 +8,8 @@
 - MDK
 - IAR
 - Eclipse
+- Pycharm
+
 
 ## 版本管理
 - [Git 工具常用操作及技巧](../Gist/Git.md)
@@ -17,6 +19,18 @@
 - 终端软件：[Xshell](http://www.netsarang.com/products/xsh_overview.html) 一个强大的安全终端模拟软件
 
 ## 编辑器
+
+一个好用的纯文本编辑器（当然也包括代码）非常重要，现在我使用 Pycharm 作为主力编辑器，下面列一下常用的编辑器快捷键:
+
+- 删除当前行 'ctrl + d'
+- 上下移动当前行 'alt + up/down'
+- 向下拷贝当前行 'ctrl + alt + down'
+- 移动到当前行首以及行末尾 'home/end'
+- 选中当前行或者多行 'shift + end/up/down'
+- 全工程搜索 'ctrl + shift + f'
+- 代码格式化 'ctrl + alt + l'
+- git commit 'ctrl + k'
+
 
 - 非常好用的本地 MarkDown 编辑器：[Typora](https://www.typora.io/)，支持 md 格式向各种格式的轻松转换
 - 云端 MarkDown 编辑器：[Cmd MarkDown](https://www.zybuluo.com/mdeditor)，云端保存和搜索功能十分强大
