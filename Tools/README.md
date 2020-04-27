@@ -31,6 +31,7 @@
 | 向下拷贝当前行| CTRL + ALT + DOWN  | 
 | 移动到当前行首以及行末尾| HOME/END | 
 | 选中当前行或者多行| SHIFT + END/UP/DOWN  | 
+| 选中当前的单词/行| 鼠标点击两次/三次 | 
 | 选中当前行光标前半段和后半段| SHIFT + CTRL + LEFT/RIGHT  | 
 | 替换| CTRL + R | 
 | 全局替换| CTRL + SHIFT + R  | 
