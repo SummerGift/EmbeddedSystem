@@ -46,6 +46,10 @@
 - 非常好用的本地 MarkDown 编辑器：[Typora](https://www.typora.io/)，支持 md 格式向各种格式的轻松转换
 - 云端 MarkDown 编辑器：[Cmd MarkDown](https://www.zybuluo.com/mdeditor)，云端保存和搜索功能十分强大
 
+## 代码统计工具
+
+- 代码统计工具，支持多平台使用、多语言识别，能够计算指定目标文件或文件夹中的文件数（files）、空白行数（blank）、注释行数（comment）和代码行数（code）：[cloc](https://github.com/AlDanial/cloc)
+
 ## 代码格式化工具
 
 - 代码格式化小工具：Astyle，可以将[ Astyle 集成到 Keil 中进行代码格式化](https://jingyan.baidu.com/article/f3e34a12d7d6e5f5eb6535c5.html)，非常方便
