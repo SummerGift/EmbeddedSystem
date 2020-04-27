@@ -6,6 +6,7 @@ import logging
 
 
 class GenerateTrainDataset:
+
     def __init__(self, folder_list):
         self.folder_list = folder_list
 
@@ -265,6 +266,13 @@ class GenerateTrainDataset:
         with open(path, "w") as f:
             for d in data:
                 f.write(d + '\n')
+
+
+def get_train_test_set():
+    dataset = GenerateTrainDataset()
+    train_set = dataset.load_data('train_dataset.txt')
+    test_set = dataset.load_data('test_dataset.txt')
+    return train_set, test_set
 
 
 def init_logger():
