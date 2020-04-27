@@ -59,6 +59,23 @@ git config --global http.proxy 'socks5://127.0.0.1:1080'
 git config --global https.proxy 'socks5://127.0.0.1:1080'
 ```
 
+### 查看环境关于代理的环境变量
+```sh
+env|grep -i proxy
+```
+
+### Linux设置/删除环境变量方法
+
+#### bash
+
+- 设置：export 变量名=变量值
+- 删除：unset 变量名
+
+#### csh
+
+- 设置：setenv 变量名 变量值
+- 删除：unsetenv 变量名
+
 ## Git 推本地 master 到远端非 master 分支
 ```sh
 git push origin master:fix_branch
