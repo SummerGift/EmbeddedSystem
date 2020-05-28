@@ -18,3 +18,9 @@
 
 - [Unit Tests, How to Write Testable Code and Why it Matters](https://www.toptal.com/qa/how-to-write-testable-code-and-why-it-matters)
 
+## GIT
+
+- [mind-the-end-of-your-line](https://adaptivepatchwork.com/2012/03/01/mind-the-end-of-your-line/)
+
+
+
