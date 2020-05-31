@@ -54,6 +54,13 @@
 
 - 代码格式化小工具：Astyle，可以将[ Astyle 集成到 Keil 中进行代码格式化](https://jingyan.baidu.com/article/f3e34a12d7d6e5f5eb6535c5.html)，非常方便
 
+## CI/CD
+
+- [TravisCI](https://travis-ci.com/)
+- [CircleCI](https://circleci.com/)
+- [Jenkins](https://www.jenkins.io/)
+- [Drone](https://drone.io/)
+
 ## 录屏软件
 
 - 非常简洁好用的录屏软件：[Camtasia 9](https://www.isharepc.com/1884.html)
