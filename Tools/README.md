@@ -18,6 +18,10 @@
 
 - 终端软件：[Xshell](http://www.netsarang.com/products/xsh_overview.html) 一个强大的安全终端模拟软件
 
+## Python Library
+
+- [schema](https://json-schema.org/understanding-json-schema/) and [JSON Schema generator](https://pypi.org/project/genson)
+
 ## 编辑器
 
 ### Pycharm
