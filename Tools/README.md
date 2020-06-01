@@ -20,7 +20,7 @@
 
 ## Python Library
 
-- [schema](https://json-schema.org/understanding-json-schema/) and [JSON Schema generator](https://pypi.org/project/genson)
+- [JSON Schema](https://json-schema.org/understanding-json-schema/) and [JSON Schema generator](https://pypi.org/project/genson)
 
 ## 编辑器
 
