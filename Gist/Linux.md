@@ -116,3 +116,8 @@ crontab file
 sudo apt-get install gcc-arm-none-eabi
 ```
 
+### ubuntu error while loading shared libraries: libncurses.so.5
+
+error while loading shared libraries: libncurses.so.5: cannot open shared object file: No such file or directory
+
+You are trying to run a 32-bit binary on a 64-bit system. You need to delete the link you created, and instead install **libncurses5:i386** so that you have the 32-bit version installed as well. It should be ported to Multi-Arch in 12.40, but you may have problems with some libraries and applications as not all of them are ported on 12.04.
