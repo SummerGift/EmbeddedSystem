@@ -116,7 +116,13 @@ crontab file
 sudo apt-get install gcc-arm-none-eabi
 ```
 
+if can't find gdb, you can copy that from arm gcc tool chain. 
+
 ### ubuntu error while loading shared libraries: libncurses.so.5
+
+```
+sudo apt-get install libncurses5:i386
+```
 
 error while loading shared libraries: libncurses.so.5: cannot open shared object file: No such file or directory
 
