@@ -88,6 +88,7 @@ sudo apt-get install libffi-dev
 ### gcc 编译出现 /usr/include/stdio.h:27:10: fatal error: bits/libc-header-start.h
 
 可以尝试输入如下命令，主要是gcc安装环境没有安装完善。
+如果没有安装该库，还会导致找不到 arm gcc 编译器的情况。
 
 ```
 sudo apt-get install gcc-multilib
