@@ -7,21 +7,25 @@
 技术文档与学习记录：
 
 - [Articles](Articles/)
-- [Computer Vision](CV/)
 
-嵌入式系统基础相关内容：
+嵌入式系统基础：
 
 - [ARM](Arm/)
 - [MCU](MCU/) 
 - [Network](Network/)
 - [Embedded Linux](Linux/)
 
-编程语言相关内容：
+机器学习：
+
+- [Machine Learning](MachineLearning/)
+
+编程语言：
 
 - [C](C/)
 - [C++](C++/)
 - [Python](Python/)
 - [JavaScript](JavaScript/)
+- [Go](Go/)
 
 环境搭建及工具：
 
