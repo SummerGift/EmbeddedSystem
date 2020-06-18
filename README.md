@@ -11,8 +11,8 @@
 嵌入式系统基础：
 
 - [ARM](Arm/)
-- [MCU](MCU/) 
 - [Network](Network/)
+- [RTOS](RTOS/)
 - [Embedded Linux](Linux/)
 
 机器学习：
