@@ -37,7 +37,7 @@ docker ps -a
 
 - 启动已停止运行的容器
 
-docker start b750bbbcfd88 
+docker start b750bbbcfd88
 
 - 后台运行
 
@@ -56,3 +56,14 @@ docker restart <容器 ID>
 - 进入容器推荐使用 exec 命令
 
 docker exec -it 243c32535da7 /bin/bash
+
+- [docker 容器数据卷](https://www.cnblogs.com/kevingrace/p/6238195.html)
+
+可以直接挂载宿主机文件或目录到容器里，可以理解为目录映射，这样就可以让所有的容器共享宿主机数据，从而只需要改变宿主机的数据源就能够影响到所有的容器数据。
+
+-v 后面的映射关系是"宿主机文件/目录:容器里对应的文件/目录"，其中，宿主机上的文件/目录是要提前存在的，容器里对应的文件/目录会自动创建。
+
+```
+-v /opt/host_folder:/var/container_folder
+```
+
