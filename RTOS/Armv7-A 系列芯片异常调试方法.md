@@ -26,37 +26,6 @@ asm volatile ("MRC p15, 0, %0, c5, c0, 0\n" : "=r" (data_stat)); Read DFSR into 
 
 ![data status](assets/1593397701371.png)
 
-## 非对齐访问
-
-```
--munaligned-access
--mno-unaligned-access
-
-Enables (or disables) reading and writing of 16- and 32- bit values from addresses that are not 16- or 32- bit aligned. 
-By default unaligned access is238 Using the GNU Compiler Collection (GCC) disabled for all pre-ARMv6, 
-all ARMv6-M and for ARMv8-M Baseline architectures, and enabled for all other architectures. 
-If unaligned access is not enabled then words in packed data structures are accessed a byte at a time.
-
-The ARM attribute Tag_CPU_unaligned_access is set in the generated object file to either true or false, 
-depending upon the setting of this option. 
-If unaligned access is enabled then the preprocessor symbol __ARM_FEATURE_UNALIGNED is also defned.
-```
-
-系统中的结构体数据，如果添加了 `__packed` 属性，则会以紧凑的方式进行内存排布，此时其中的一些数据在内存中的排布就是非对齐的。在程序运行时，如果系统不允许非对齐访问，此时对该结构体中的非对齐数据进行访问，则会出现 data abort 的错误。
-
-如果在编译和链接时添加 `-mno-unaligned-access` 不支持非对齐内存访问选项，将会告诉编译器，生成操作这些非对齐数据指令，需要一个字节一个字节地读取，然后将结果拼凑成最终的数据。用这种方式操作数据降低了数据的访问效率，但是可以避免出现非对齐访问错误。
-
-在 armv7 中可以开启或者关闭非对齐访问检查，例如使用如下指令关闭非对齐访问检查：
-
-```
-    /* disable the data alignment check */
-    mrc p15, 0, r1, c1, c0, 0
-    bic r1, #(1<<1)
-    mcr p15, 0, r1, c1, c0, 0
-```
-如果关闭了非对齐访问检查，此时 CPU 访问非对齐数据将不会报错，在底层硬件实现时，可能会将一次访问拆成多次对齐访问来实现，但是在软件层是不感知的。尽管如此，还是降低了数据的访问效率。另外，一些**强序内存**（例如设备内存）是不支持非对齐访问的。
-
-
 
 
 
