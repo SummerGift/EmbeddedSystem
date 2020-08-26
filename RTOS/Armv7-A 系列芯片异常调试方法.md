@@ -31,9 +31,15 @@ asm volatile ("MRC p15, 0, %0, c5, c0, 0\n" : "=r" (data_stat)); Read DFSR into 
 ```
 -munaligned-access
 -mno-unaligned-access
-Enables (or disables) reading and writing of 16- and 32- bit values from addresses that are not 16- or 32- bit aligned. By default unaligned access is238 Using the GNU Compiler Collection (GCC) disabled for all pre-ARMv6, all ARMv6-M and for ARMv8-M Baseline architectures, and enabled for all other architectures. If unaligned access is not enabled then words in packed data structures are accessed a byte at a time.
 
-The ARM attribute Tag_CPU_unaligned_access is set in the generated object file to either true or false, depending upon the setting of this option. If unaligned access is enabled then the preprocessor symbol __ARM_FEATURE_UNALIGNED is also defned.
+Enables (or disables) reading and writing of 16- and 32- bit values from addresses that are not 16- or 32- bit aligned. 
+By default unaligned access is238 Using the GNU Compiler Collection (GCC) disabled for all pre-ARMv6, 
+all ARMv6-M and for ARMv8-M Baseline architectures, and enabled for all other architectures. 
+If unaligned access is not enabled then words in packed data structures are accessed a byte at a time.
+
+The ARM attribute Tag_CPU_unaligned_access is set in the generated object file to either true or false, 
+depending upon the setting of this option. 
+If unaligned access is enabled then the preprocessor symbol __ARM_FEATURE_UNALIGNED is also defned.
 ```
 
 系统中的结构体数据，如果添加了 `__packed` 属性，则会以紧凑的方式进行内存排布，此时其中的一些数据在内存中的排布就是非对齐的。在程序运行时，如果系统不允许非对齐访问，此时对该结构体中的非对齐数据进行访问，则会出现 data abort 的错误。
