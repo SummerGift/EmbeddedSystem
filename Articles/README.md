@@ -1,6 +1,6 @@
 # Reference
 
-##Code Coverage for Embedded Systems
+## Code Coverage for Embedded Systems
 
 - [Code Coverage for Embedded Target with Eclipse, gcc and gcov](https://mcuoneclipse.com/2014/12/26/code-coverage-for-embedded-target-with-eclipse-gcc-and-gcov/)
 
@@ -24,5 +24,9 @@
 
 - [mind-the-end-of-your-line](https://adaptivepatchwork.com/2012/03/01/mind-the-end-of-your-line/)
 
+## Computer Science
 
+- [ABC: Always Be Coding](https://medium.com/always-be-coding/abc-always-be-coding-d5f8051afce2)
+- [Big-O Cheatsheet](https://www.bigocheatsheet.com/)
+- [A Gentle Introduction to Algorithm Complexity Analysis](http://discrete.gr/complexity/)
 
