@@ -29,4 +29,7 @@
 - [ABC: Always Be Coding](https://medium.com/always-be-coding/abc-always-be-coding-d5f8051afce2)
 - [Big-O Cheatsheet](https://www.bigocheatsheet.com/)
 - [A Gentle Introduction to Algorithm Complexity Analysis](http://discrete.gr/complexity/)
+- [Intermediate_representation](https://en.wikipedia.org/wiki/Intermediate_representation)
+
+
 
