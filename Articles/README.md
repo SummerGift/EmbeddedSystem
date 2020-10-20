@@ -32,7 +32,9 @@
 
 - [A Gentle Introduction to Algorithm Complexity Analysis](http://discrete.gr/complexity/)
 
-- [Intermediate_representation](https://en.wikipedia.org/wiki/Intermediate_representation)
+- [Intermediate representation](https://en.wikipedia.org/wiki/Intermediate_representation)
+
+- [Just-in-time compilation](https://en.wikipedia.org/wiki/Just-in-time_compilation)
 
 
 
