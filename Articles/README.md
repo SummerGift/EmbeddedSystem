@@ -18,7 +18,7 @@
 
 - [Unit Tests, How to Write Testable Code and Why it Matters](https://www.toptal.com/qa/how-to-write-testable-code-and-why-it-matters)
 
-## GIT
+## Git
 
 - [Configuring Git to handle line endings](https://help.github.com/en/github/using-git/configuring-git-to-handle-line-endings)
 
@@ -27,8 +27,11 @@
 ## Computer Science
 
 - [ABC: Always Be Coding](https://medium.com/always-be-coding/abc-always-be-coding-d5f8051afce2)
+
 - [Big-O Cheatsheet](https://www.bigocheatsheet.com/)
+
 - [A Gentle Introduction to Algorithm Complexity Analysis](http://discrete.gr/complexity/)
+
 - [Intermediate_representation](https://en.wikipedia.org/wiki/Intermediate_representation)
 
 
