@@ -1,8 +1,8 @@
 # lwip 中内存系统错误说明
 
-在 lwip 系统中的内存申请可以配置为从多个位置分配内存，例如从 lwip 自带的内存池中和内存堆中，
+在 lwip 系统中的内存申请可以配置为从多个位置分配内存，例如从 lwip 自带的内存池中和内存堆中。在 rt-thread 中接管了 lwip 的堆内存分配，因此如果调用 lwip 的接口尝试从堆中分配内存，那么将会从 rt-thread 的系统堆管理器中进行分配。
 
-在 rt-thread 中接管了 lwip 的堆内存分配，因此如果调用 lwip 的接口尝试从堆中分配内存，那么将会从 rt-thread 的系统堆管理器中进行分配。但是 rt-thread 的堆管理器和 lwip 自带的堆管理器有所不同，当使用 lwip 的 mem.c  中的内存管理算法进行内存分配时，`LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT` 宏会影响分配器的行为。
+但是 rt-thread 的堆管理器和 lwip 自带的堆管理器有所不同，当使用 lwip 的 mem.c  中的内存管理算法进行内存分配时，`LWIP_ALLOW_MEM_FREE_FROM_OTHER_CONTEXT` 宏会影响分配器的行为。
 
 ```c
 /**
