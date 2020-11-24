@@ -149,7 +149,41 @@ where the contents of the object can change in ways not known to the compiler.
 - 是否是一些关键操作没有添加 volatile
 - 是否是有内存写穿（因为不同的优化等级改变了内存排布导致写穿位置发生改变）
 
+## 如何避免关键操作被优化
+
+### 情况一
+
 如果发现加上了 `printf` 打印，或者调用了某个外部函数，系统就正常运行了，也要怀疑是否出现了变量访问被优化的情况，因为如果加上了**外部函数**（非本文件中的函数或其他库中的函数）调用，则编译器无法确定被引用的变量是否被外部函数所改变，因而会自动从原有地址重新读取该变量的值。
+
+如果修改上面的测试代码，在 while 循环中加入 `rt_kprintf` 打印如下：
+
+```c
+while(flag==0)
+{
+    rt_kprintf("5\n");
+}
+```
+
+则程序仍然正常运行，原因就是编译器不知道 `rt_kprintf` 函数是否会修改 flag 变量，因此编译器会尝试每次都重新读取 `flag` 的值。
+
+### 情况二
+
+还可以使用另外一种方式来解决这个问题，如下：
+
+```c
+while(flag==0)
+{
+    asm volatile ("":::"memory");
+}
+```
+
+```
+Some instructions clobber some hardware registers. We have to list those registers in the clobber-list, ie the field after the third ’:’ in the asm function. This is to inform gcc that we will use and modify them ourselves. So gcc will not assume that the values it loads into these registers will be valid. We shoudn’t list the input and output registers in this list. Because, gcc knows that "asm" uses them (because they are specified explicitly as constraints). If the instructions use any other registers, implicitly or explicitly (and the registers are not present either in input or in the output constraint list), then those registers have to be specified in the clobbered list.
+
+If our instruction can alter the condition code register, we have to add "cc" to the list of clobbered registers.
+
+If our instruction modifies memory in an unpredictable fashion, add "memory" to the list of clobbered registers. This will cause GCC to not keep memory values cached in registers across the assembler instruction. We also have to add the volatile keyword if the memory affected is not listed in the inputs or outputs of the asm.
+```
 
 ## 结论
 
