@@ -1,6 +1,5 @@
 # volatile 的使用说明
 
-
 By declaring an object volatile, the compiler is informed that the value of the object can change beyond the compiler’s control. The compiler must also assume that any accesses can have side effects—thus all accesses to the volatile object must be preserved.
 
 There are three main reasons for declaring an object volatile:
@@ -16,6 +15,120 @@ the compiler.
 the object is shared between several tasks in a multitasking environment。
 
 当同一**全局变量**在多个线程之间被共享时，有可能会出现同步错误，编译器可能会将访问该全局变量的代码优化为访问某个寄存器，而不会再次访问相应的内存，导致程序运行错误。
+
+测试代码如下：
+
+```c
+static struct rt_thread v_thread1;
+static char v_thread1_stack[8192];
+static struct rt_thread v_thread2;
+static char v_thread2_stack[8192];
+
+static int flag;
+static int count;
+
+static void rt_init_thread1_entry(void *parameter)
+{
+	while(1)
+	{
+		rt_thread_mdelay(300);
+		flag = 1;
+		rt_thread_mdelay(300);
+		flag = 0;
+
+	    if(count++ > 10)
+	    {
+			rt_kprintf("thread1 exit.\n");
+			flag = 1;
+	    	return;
+	    }
+	}
+}
+
+static void rt_init_thread2_entry(void *parameter)
+{
+	while(1)
+	{
+	    while(flag==0);
+	    rt_kprintf("thread2 running.\n");
+	    rt_thread_mdelay(100);
+
+	    if(count++ > 10)
+	    {
+			rt_kprintf("thread2 exit.\n");
+	    	return;
+	    }
+	}
+}
+
+int volatile_test()
+{
+
+    rt_err_t result = RT_EOK;
+    result = rt_thread_init(&v_thread1, "vth1",
+                            rt_init_thread1_entry,
+                            RT_NULL,
+							v_thread1_stack, sizeof(v_thread1_stack),
+                            RT_THREAD_PRIORITY_MAX / 3 - 1 , 20);
+    if (result == RT_EOK)
+        rt_thread_startup(&v_thread1);
+
+    result = rt_thread_init(&v_thread2, "vth2",
+                            rt_init_thread2_entry,
+                            RT_NULL,
+							v_thread2_stack, sizeof(v_thread2_stack),
+                            RT_THREAD_PRIORITY_MAX / 3, 20);
+    if (result == RT_EOK)
+        rt_thread_startup(&v_thread2);
+
+    return 0;
+
+}
+MSH_CMD_EXPORT(volatile_test, run volatile_test);
+```
+
+上面的测试代码在 O0 优化时正常运行，打印结果如下：
+
+```
+msh />volatile_test
+thread2 running.
+msh />thread2 running.
+thread2 running.
+thread2 running.
+thread2 running.
+thread2 running.
+thread2 running.
+thread2 running.
+thread2 running.
+thread2 exit.
+thread1 exit.
+```
+
+但是如果开启 O3 优化，则打印结果如下：
+
+```
+msh />volatile_test
+thread1 exit.
+```
+
+也就是说 thread2 永远得不到运行，那么原因是什么呢，请看下图的反汇编，语句
+
+```
+while(flag==0);
+```
+
+被优化成了如下汇编：
+
+```
+00108b4c:   ldr     r3, [r4, #+288] # 第一次读取 flag 的实际值到 r3
+00108b50:   cmp     r3, #0          # 对比 r3 的值是否为 0
+00108b54:   bne     +0      ;       # 如果不为 0 则跳转
+00108b58:   b       -8      ;       # 再次跳转回 cmp 语句继续循环
+```
+
+也就是说，整个程序被翻译成，只读取一次 flag 的实际值，后续一直使用 r3 寄存器中的值来进行对比，而第一次读取到的 r3 值为零，因此 while 的条件将永远成立，thread2 永远也得不到执行。
+
+![1606203190756](assets/1606203190756.png)
 
 ## Trigger access
 
@@ -43,4 +156,3 @@ where the contents of the object can change in ways not known to the compiler.
 关于 volatile 关键字，最重要的是要认识到一点，即是否在编译器清楚的范围之外，所操作的变量有可能被改变，如果有这种可能性，则一定要添加上 volatile 关键字，以避免这种错误。
 
 归根结底，是要确定代码在真实运行的状态下，当其访问某个变量时，是否真正地从这个变量所在的地址重新读取该变量的值，而不是直接使用上次存储在某个寄存器中的值。
-
