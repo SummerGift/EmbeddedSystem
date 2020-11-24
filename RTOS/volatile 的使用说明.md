@@ -177,13 +177,18 @@ while(flag==0)
 }
 ```
 
+If our instruction modifies memory in an unpredictable fashion, add "memory" to the list of clobbered registers. This will cause GCC to not keep memory values cached in registers across the assembler instruction. We also have to add the **volatile keyword** if the memory affected is not listed in the inputs or outputs of the asm.
+
+这将会告诉编译器，经过一些指令后，memory 中的数据已经发生了变化，GCC 将不会再使用寄存器作为数据的缓存。因此再次使用这些数据时，会从内存中重新尝试读取。使用关键字 volatile 也可以达到同样的效果。
+
+以下描述摘自 [《GCC-Inline-Assembly-HOWTO》](https://www.ibiblio.org/gferg/ldp/GCC-Inline-Assembly-HOWTO.html) ：
+
 ```
 Some instructions clobber some hardware registers. We have to list those registers in the clobber-list, ie the field after the third ’:’ in the asm function. This is to inform gcc that we will use and modify them ourselves. So gcc will not assume that the values it loads into these registers will be valid. We shoudn’t list the input and output registers in this list. Because, gcc knows that "asm" uses them (because they are specified explicitly as constraints). If the instructions use any other registers, implicitly or explicitly (and the registers are not present either in input or in the output constraint list), then those registers have to be specified in the clobbered list.
 
 If our instruction can alter the condition code register, we have to add "cc" to the list of clobbered registers.
-
-If our instruction modifies memory in an unpredictable fashion, add "memory" to the list of clobbered registers. This will cause GCC to not keep memory values cached in registers across the assembler instruction. We also have to add the volatile keyword if the memory affected is not listed in the inputs or outputs of the asm.
 ```
+
 
 ## 结论
 
