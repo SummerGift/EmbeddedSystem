@@ -29,36 +29,36 @@ static int count;
 
 static void rt_init_thread1_entry(void *parameter)
 {
-	while(1)
-	{
-		rt_thread_mdelay(300);
-		flag = 1;
-		rt_thread_mdelay(300);
-		flag = 0;
+    while(1)
+    {
+        rt_thread_mdelay(300);
+        flag = 1;
+        rt_thread_mdelay(300);
+        flag = 0;
 
-	    if(count++ > 10)
-	    {
-			rt_kprintf("thread1 exit.\n");
-			flag = 1;
-	    	return;
-	    }
-	}
+        if(count++ > 10)
+        {
+            rt_kprintf("thread1 exit.\n");
+            flag = 1;
+            return;
+        }
+    }
 }
 
 static void rt_init_thread2_entry(void *parameter)
 {
-	while(1)
-	{
-	    while(flag==0);
-	    rt_kprintf("thread2 running.\n");
-	    rt_thread_mdelay(100);
+    while(1)
+    {
+        while(flag==0);
+        rt_kprintf("thread2 running.\n");
+        rt_thread_mdelay(100);
 
-	    if(count++ > 10)
-	    {
-			rt_kprintf("thread2 exit.\n");
-	    	return;
-	    }
-	}
+        if(count++ > 10)
+        {
+            rt_kprintf("thread2 exit.\n");
+            return;
+        }
+    }
 }
 
 int volatile_test()
@@ -68,7 +68,7 @@ int volatile_test()
     result = rt_thread_init(&v_thread1, "vth1",
                             rt_init_thread1_entry,
                             RT_NULL,
-							v_thread1_stack, sizeof(v_thread1_stack),
+                            v_thread1_stack, sizeof(v_thread1_stack),
                             RT_THREAD_PRIORITY_MAX / 3 - 1 , 20);
     if (result == RT_EOK)
         rt_thread_startup(&v_thread1);
@@ -76,7 +76,7 @@ int volatile_test()
     result = rt_thread_init(&v_thread2, "vth2",
                             rt_init_thread2_entry,
                             RT_NULL,
-							v_thread2_stack, sizeof(v_thread2_stack),
+                            v_thread2_stack, sizeof(v_thread2_stack),
                             RT_THREAD_PRIORITY_MAX / 3, 20);
     if (result == RT_EOK)
         rt_thread_startup(&v_thread2);
