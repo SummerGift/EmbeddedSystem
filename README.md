@@ -24,6 +24,7 @@
 - [C](C/)
 - [C++](C++/)
 - [Python](Python/)
+- [Java](Java/)
 - [JavaScript](JavaScript/)
 - [Go](Go/)
 
@@ -36,6 +37,7 @@
 
 - [Math](Math/)
 - [DataStructure](DataStructure/)
+- [Principles of Compiler](Compiler/)
 
 本仓库将会长期更新嵌入式领域相关的知识，一部分内容是作者的学习笔记和心得总结，一部分是日常工作中的常用技巧，还有通过各种方式收集的嵌入式知识。通过总结提炼所拥有的技能，不断地将新的工具增加到技能列表中。
 
