@@ -53,7 +53,6 @@ int main(int argc, char const *argv[])
 
     return 0;
 }
-
 ```
 
 ## 使用 clang 命令生成 AST
@@ -61,3 +60,7 @@ int main(int argc, char const *argv[])
 ```
 clang -cc1 -ast-dump hello.c > hello.ast
 ```
+
+运行结果如下图所示：
+
+![1607412094452](assets/1607412094452.png)
