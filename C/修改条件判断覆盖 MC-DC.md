@@ -2,6 +2,8 @@
 
 **修改条件/判断覆盖**（**Modified condition/decision coverage**）简称**MC/DC**，是用在飞航安全软件文件[DO-178B](https://zh.wikipedia.org/w/index.php?title=DO-178B&action=edit&redlink=1)的[白箱测试](https://zh.wikipedia.org/wiki/白箱測試)方式，可以判断A等级的[软件](https://zh.wikipedia.org/wiki/軟體)是否有经过适当的[软件测试](https://zh.wikipedia.org/wiki/软件测试)。
 
+对程序中条件和判定测试充分性的不同造成了不同的软件测试准则，有 SC,CC,DC,C/DC,MC/DC,MCC 等，但这些准则的覆盖等级都不一样，其中，MC/DC 以多重条件覆盖、线性等价测试用例数量等特点而受到重视。航空电子标准 RTCA/DO-178B 的 A 级认证要求程序的每一行代码都要进行 MC/DC 覆盖测试。
+
 依照修改条件/判断覆盖的准则，测试过程中以下条件至少需成立一次[[1\]](https://zh.wikipedia.org/wiki/修改條件判斷覆蓋#cite_note-1)。
 
 - 每一个判断的所有可能结果都出现过
@@ -11,15 +13,17 @@
 
 DO-178B中指定会影响飞机起飞及降落安全性的软件（A等级软件），需满足修改条件/判断覆盖的[代码覆盖](https://zh.wikipedia.org/wiki/代碼覆蓋)测试。
 
+
+
 ## 定义
 
 - 条件
 
-  条件是指最小单位的[逻辑](https://zh.wikipedia.org/wiki/邏輯代數)[运算式](https://zh.wikipedia.org/w/index.php?title=運算式&action=edit&redlink=1)，也就是无法再分解的逻辑运算式。
+  条件是指最小单位的[逻辑](https://zh.wikipedia.org/wiki/邏輯代數)[运算式](https://zh.wikipedia.org/w/index.php?title=運算式&action=edit&redlink=1)，也就是无法再分解的逻辑运算式。不包含逻辑操作符的逻辑表达式。仅由关系操作符（<,>,=等）构成的逻辑表达式属于条件。
 
-- 判断
+- 判定
 
-  判断是指条件及零个至多个[逻辑运算子](https://zh.wikipedia.org/wiki/邏輯運算子)组成的逻辑运算式，一个没有逻辑运算子的判断是判断也是条件。
+  判断是指条件及零个至多个[逻辑运算子](https://zh.wikipedia.org/wiki/邏輯運算子)组成的逻辑运算式，一个没有逻辑运算子的判断是判断也是条件。由条件及零个或多个逻辑操作符（如 and, or, not, xor）组成的逻辑表达式。如果一个判定中的某一条件多次出现，那么每次出现均为不同的条件。
 
 - 条件覆盖
 
