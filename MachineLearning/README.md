@@ -1,6 +1,6 @@
-# Computer Vision
+# Machine Learning on Embedded Platform
 
-## Course
+## Outline
 
 - [week1 CV Basic Ⅰ](week1)
 
