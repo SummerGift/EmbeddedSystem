@@ -6,14 +6,20 @@
 
 ## 准备步骤
 
-- 还可以安装 `gdb-multiarch` 作为 gdb 服务端 
 - scons 编译工程
 - 运行 `qemu-dbg.bat` 启动 QEMU 模拟
+
+可以使用 arm-none-eabi-gdb 或者 gdb-multiarch 作为 gdb 服务端。
+
+### 使用 `gdb-multiarch` 
+
+- 安装 `gdb-multiarch` 作为 gdb 服务端 
+- `gdb-multiarch rtthread.elf -ex "tar ext localhost:1234"` 连接到 QEMU 进行代码调试
+
+### 使用 arm-none-eabi-gdb
+
 - `arm-none-eabi-gdb rtthread.elf -ex "tar ext localhost:1234"` 连接到 QEMU 进行代码调试
 
-或者
-
-- `gdb-multiarch rtthread.elf -ex "tar ext localhost:1234"` 连接到 QEMU 进行代码调试
 
 ## GDB 常用命令
 
