@@ -22,9 +22,9 @@
 
 ### 使用图形化界面
 
-如果想要以 GUI 模式启动 gdb，可以在命令行中添加参数 `-tui`。 
+如果想要以 GUI 模式启动 gdb，可以在命令行中添加参数 `-tui`，如下面的命令：
 
-gdb-multiarch rtthread.elf -ex "tar ext localhost:1234" -tui
+- `gdb-multiarch rtthread.elf -ex "tar ext localhost:1234" -tui`
 
 ## GDB 常用命令
 
@@ -37,7 +37,6 @@ gdb-multiarch rtthread.elf -ex "tar ext localhost:1234" -tui
 | b       | Set breakpoint at specified line or function              |
 | display | Print value of expression EXP each time the program stops |
 | p       | Print value of expression EXP                             |
-
 
 
 ## 问题
