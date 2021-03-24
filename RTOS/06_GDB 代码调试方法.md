@@ -43,7 +43,21 @@
 | display | Print value of expression EXP each time the program stops |
 | p       | Print value of expression EXP                             |
 
-
 ## 问题
 
 1. 栈内存被写穿的情况，由于线程栈太小，导致在函数较深调用时，导致栈溢出，破坏了系统中其他的数据结构。如果在调试的时候发现，某个变量在没有主动修改的时候突然发生改变，可以怀疑是否出现了栈溢出。
+
+
+## RT-Smart 调试配置
+
+1. 在 `~/.bachrc` 配置好工具链地址
+```
+export RTT_CC=gcc
+export RTT_EXEC_PATH=your_musleabi_toolchain_path/bin
+export RTT_CC_PREFIX=arm-linux-musleabi-
+export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
+```
+
+2. 使用 gdb 进行调试
+
+- `gdb-multiarch rtthread.elf -ex "tar ext localhost:1234" -tui`
