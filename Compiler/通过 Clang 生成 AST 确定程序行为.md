@@ -87,4 +87,4 @@ clang -cc1 -ast-dump hello.c > hello.ast
 
 运行结果如下图所示：
 
-![1607412094452](assets/1607412094452.png)
+![1607412094452](figures/1607412094452.png)
