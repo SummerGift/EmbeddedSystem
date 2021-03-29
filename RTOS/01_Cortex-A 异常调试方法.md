@@ -24,7 +24,7 @@ asm volatile ("MRC p15, 0, %0, c5, c0, 0\n" : "=r" (data_stat)); Read DFSR into 
 
 得出错误的原因是确实是数据未对齐（验证了先前的猜想）。
 
-![data status](assets/1593397701371.png)
+![data status](figures/1593397701371.png)
 
 
 
