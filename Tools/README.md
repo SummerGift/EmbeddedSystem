@@ -91,3 +91,14 @@
 ## linux 下简洁的串口工具
 
 - apt install cutecom
+
+## 可能用到的自动化绘图工具
+
+- [Graphviz](https://graphviz.org/)
+
+Graphviz (short for Graph Visualization Software) is a package of open-source tools initiated by AT&T Labs Research for drawing graphs specified in DOT language scripts having the file name extension "gv". It also provides libraries for software applications to use the tools. 
+
+- DOT (graph description language)
+
+
+
