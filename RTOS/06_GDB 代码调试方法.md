@@ -30,7 +30,7 @@
 
 1. 按下 ctrl + x 然后再按下 2 将会打开汇编视图和寄存器视图
 2. 按下 ctrl + x 然后再按下 1 将会两个是视图中的一个
- 
+
 ## GDB 常用命令
 
 | 命令    | 说明                                                      |
@@ -42,6 +42,15 @@
 | b       | Set breakpoint at specified line or function              |
 | display | Print value of expression EXP each time the program stops |
 | p       | Print value of expression EXP                             |
+
+### 断点操作命令
+
+| 命令           | 说明                                 |
+| -------------- | ------------------------------------ |
+| info b         | 查询当前系统中断点命令，简写为 `i b` |
+| dis + 断点编号 | 使指定编号的断点 disable             |
+| ena + 断点编号 | 使指定编号的断点 enable              |
+| del + 断点编号 | 删除指定编号的断点                   |
 
 ## 问题
 
