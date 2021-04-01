@@ -100,5 +100,9 @@ Graphviz (short for Graph Visualization Software) is a package of open-source to
 
 - DOT (graph description language)
 
+## 数学表达式 LaTeX 渲染工具
 
-
+- Typora 中可以选择数学公式 inline 的渲染方式
+- VScode 中可以安装 [Markdown+Math](https://marketplace.visualstudio.com/items?itemName=goessner.mdmath) 来支持 LaTeX 的渲染
+- 在 Google 浏览器上可以使用插件 [TeX All the Thing](https://chrome.google.com/webstore/detail/tex-all-the-things/cbimabofgmfdkicghcadidpemeenbffn?hl=en-US) 来支持网页的 LaTeX 渲染和公式的拷贝
+- [LaTeX 公式编辑器](https://www.latexlive.com/##)可以处理一些公式的编辑以及图片转换等功能
