@@ -1,13 +1,11 @@
 # RT-Smart 页表初始化过程详解
 
-想要对 RT-Smart 的页表内存管理功能有所了解，需要熟悉相关代码：
+想要对 RT-Smart 的物理页内存管理功能有所了解，需要熟悉相关代码：
 
 - RT-Smart 页初始化相关功能
 - 物理页分配算法伙伴系统的实现
 
-## 物理页内存管理
-
-### 物理页管理初始化
+## 物理页管理初始化
 
 在系统初始化早期，会先执行 `rt_page_init` 函数来对物理页管理所需要的数据结构进行初始化，下面是对这段代码的详细解释：
 
@@ -119,6 +117,105 @@ void rt_page_init(rt_region_t reg)
 }
 ```
 
-### 物理页管理算法实现
+## 物理页管理算法简介
+
+伙伴系统在现代操作系统中被广泛地用于分配连续的物理内存页。其基本思想是将物理内存划分成连续的块，以块作为基本单位进行分配。不同块的大小可以不同，但每个块都由一个或多个连续的物理页组成，物理页的数量必须是 2 的 n 次幂（ 0 <= n < 预设的最大值），其中预设的最大值将决定能够分配的连续物理内存区域的最大大小，一般由开发者根据实际需要指定。
+
+当一个请求需要分配 m 个物理页时，伙伴系统将寻找一个大小合适的块，该块包含 `2^n` 个物理页，且满足 2^(n-1)  < m < 2^n。在处理分配请求的过程中，大的块可以分裂成两半，即两个小一号的块，这两个块互为**伙伴**。分裂得到块可以继续分裂，直到得到一个大小合适的块去服务相应的分配请求。在一个块被释放后，分配器会找到其伙伴块，若伙伴块页处于空闲的状态，则将这两个伙伴块进行合并没形成一个大一号的空闲块，然后继续尝试向上合并。由分裂操作和合并操作都是级联的，因此能够很好地缓解外部碎片的问题。
+
+下图表达了伙伴系统的基本思想，基于伙伴块进行分裂与合并。
+
+![image-20210401101848925](figures/image-20210401101848925.png)
+
+## 伙伴系统实现
+
+在 RT-Smart 系统中，使用空闲链表数组来实现伙伴系统。具体来说，全局有一个有序数组，数组的每一项指向一条空闲链表，每条链表将其对应大小的空闲块连接起来，一条链表中的空闲块大小相同。当接收到分配请求后，伙伴分配器首先算出应该分配多大的空闲块，然后查找对应的空闲链表。
 
 想要了解物理页算法的实现过程，那就要熟悉物理页的申请和释放算法，也就是页面释放函数 `_pages_free` 和物理页申请函数 `_pages_alloc`。
+
+### 页表释放过程
+
+```c
+
+static int _pages_free(struct page *p, uint32_t size_bits)
+{
+    /* 根据 size_bits 获取当前物理页的大小 */
+    uint32_t level = size_bits;
+    uint32_t high = ARCH_ADDRESS_WIDTH_BITS - size_bits - 1;
+    struct page *buddy;
+
+    RT_ASSERT(p->ref_cnt > 0);
+    RT_ASSERT(p->size_bits == ARCH_ADDRESS_WIDTH_BITS);
+
+     /* 将该物理页的引用计数减一，如果引用计数不为 0 则直接返回 */
+    p->ref_cnt--;
+    if (p->ref_cnt != 0)
+    {
+        return 0;
+    }
+
+    while (level < high)
+    {
+        buddy = buddy_get(p, level);
+        if (buddy && buddy->size_bits == level)
+        {
+            page_remove(buddy, level);
+            p = (p < buddy) ? p : buddy;
+            level++;
+        }
+        else
+        {
+            break;
+        }
+    }
+    page_insert(p, level);
+    return 1;
+}
+```
+
+### 页表申请过程
+
+```c
+static struct page *_pages_alloc(uint32_t size_bits)
+{
+    struct page *p;
+
+    if (page_list[size_bits])
+    {
+        p = page_list[size_bits];
+        page_remove(p, size_bits);
+    }
+    else
+    {
+        uint32_t level;
+        uint32_t high = ARCH_ADDRESS_WIDTH_BITS - size_bits - 1;
+
+        for (level = size_bits + 1; level <= high; level++)
+        {
+            if (page_list[level])
+            {
+                break;
+            }
+        }
+        if (level == high + 1)
+        {
+            return 0;
+        }
+
+        p = page_list[level];
+        page_remove(p, level);
+        while (level > size_bits)
+        {
+            page_insert(p, level - 1);
+            p = buddy_get(p, level - 1);
+            level--;
+        }
+    }
+    p->size_bits = ARCH_ADDRESS_WIDTH_BITS;
+    p->ref_cnt = 1;
+    return p;
+}
+```
+
+
+
