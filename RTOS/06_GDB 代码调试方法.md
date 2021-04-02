@@ -28,20 +28,23 @@
 
 ### 查看反汇编
 
-1. 按下 ctrl + x 然后再按下 2 将会打开汇编视图和寄存器视图
-2. 按下 ctrl + x 然后再按下 1 将会两个是视图中的一个
+1. 按下 ctrl + x 然后再按下 2 将会切换视图，例如汇编视图和寄存器视图
+2. 按下 ctrl + x 然后再按下 1 将会放大两个视图中的一个
 
 ## GDB 常用命令
 
-| 命令    | 说明                                                      |
-| ------- | --------------------------------------------------------- |
-| r       | Start debugged program                                    |
-| c       | Continue program being debugged                           |
-| n       | Step program                                              |
-| s       | Step program until it reaches a different source line     |
-| b       | Set breakpoint at specified line or function              |
-| display | Print value of expression EXP each time the program stops |
-| p       | Print value of expression EXP                             |
+| 命令    | 说明                                                       |
+| ------- | ---------------------------------------------------------- |
+| r       | Start debugged program                                     |
+| c       | Continue program being debugged                            |
+| n       | Step program                                               |
+| ni      | 运行到下一条汇编指令，但是不进行 bl 跳转                   |
+| s       | Step program until it reaches a different source line      |
+| si      | 运行到下一条汇编指令，会跳转到下一条汇编执行，跟进 bl 命令 |
+| b       | Set breakpoint at specified line or function               |
+| display | Print value of expression EXP each time the program stops  |
+| p       | Print value of expression EXP                              |
+| q       | 退出 gdb                                                   |
 
 ### 断点操作命令
 
@@ -51,6 +54,13 @@
 | dis + 断点编号 | 使指定编号的断点 disable             |
 | ena + 断点编号 | 使指定编号的断点 enable              |
 | del + 断点编号 | 删除指定编号的断点                   |
+
+### 打开和关闭 gdb
+
+| 命令                     | 说明           |
+| ------------------------ | -------------- |
+| ctrl + d                 | 退出 GDB       |
+| ctrl + a，松开后再按下 x | 退出 QEMU 调试 |
 
 ## 问题
 
