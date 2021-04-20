@@ -13,6 +13,10 @@
 
 ## 什么是 ARM Trusted Firmware 
 
+ARMv8-A provides two security states, Secure and Non-secure. The Non-secure state is also referred to as the Normal World. This enables an Operating System (OS) to run in parallel with a trusted OS on the same hardware, and provides protection against certain software attacks and hardware attacks. ARM TrustZone technology enables the system to be partitioned between the Normal and Secure worlds. As with the ARMv7-A architecture, the Secure monitor acts as a gateway for moving between the Normal and Secure worlds.
+
+![image-20210420171201281](figures/image-20210420171201281.png)
+
 
 
 
