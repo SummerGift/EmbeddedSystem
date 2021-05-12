@@ -49,20 +49,20 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 
 ### 常用调试命令
 
-| 命令    | 说明                                                       |
-| ------- | ---------------------------------------------------------- |
-| r       | Start debugged program                                     |
-| c       | Continue program being debugged                            |
-| n       | Step program                                               |
-| ni      | 运行到下一条汇编指令，但是不进行 bl 跳转                   |
-| s       | Step program until it reaches a different source line      |
-| si      | 运行到下一条汇编指令，会跳转到下一条汇编执行，跟进 bl 命令 |
-| b       | Set breakpoint at specified line or function               |
-| display | Print value of expression EXP each time the program stops  |
-| p       | Print value of expression EXP                              |
-| u       | until 可以当做单次断点，使用 u *0x60000000 跳转到指定地址  |
-| x       | x  0x60000000 显示指定地址中的数值，相当于 dump 功能       |
-| q       | 退出 gdb                                                   |
+| 命令    | 说明                                                         |
+| ------- | ------------------------------------------------------------ |
+| r       | Start debugged program                                       |
+| c       | Continue program being debugged                              |
+| n       | Step program                                                 |
+| ni      | 运行到下一条汇编指令，但是不进行 bl 跳转                     |
+| s       | Step program until it reaches a different source line        |
+| si      | 运行到下一条汇编指令，会跳转到下一条汇编执行，跟进 bl 命令   |
+| b       | Set breakpoint at specified line or function                 |
+| display | Print value of expression EXP each time the program stops    |
+| p       | Print value of expression EXP                                |
+| u       | until 可以当做单次断点，使用 u *0x60000000 跳转到指定地址，u 指令后面跟想要跳转的位置 |
+| x       | x  0x60000000 显示指定地址中的数值，相当于 dump 功能         |
+| q       | 退出 gdb                                                     |
 
 如果打 s、n 指令的话，必须要有源代码支持，如果没有源代码支持，只能打出 si、ni，这里  si ni 是针对反汇编指令来说的，如果有源代码的话就可以使用 s、n 指令。
 
