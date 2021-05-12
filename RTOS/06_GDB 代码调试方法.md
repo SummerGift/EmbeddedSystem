@@ -60,6 +60,8 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 | b       | Set breakpoint at specified line or function               |
 | display | Print value of expression EXP each time the program stops  |
 | p       | Print value of expression EXP                              |
+| u       | until 可以当做单次断点，使用 u *0x60000000 跳转到指定地址  |
+| x       | x  0x60000000 显示指定地址中的数值，相当于 dump 功能       |
 | q       | 退出 gdb                                                   |
 
 如果打 s、n 指令的话，必须要有源代码支持，如果没有源代码支持，只能打出 si、ni，这里  si ni 是针对反汇编指令来说的，如果有源代码的话就可以使用 s、n 指令。
