@@ -1,29 +1,27 @@
-# RT-Smart 启动过程代码分析
+# RT-Smart 启动过程源代码分析
 
-在熟悉 RT-Smart 架构的过程中，对其启动过程的了解是必不可少的，在系统正常运行之前，做了哪些准备工作呢？
+在熟悉 RT-Smart 架构的过程中，研究其启动过程的是必不可少的，那么在系统正常运行之前，需要做哪些准备工作呢。本文将以 32 位 RT-Smart 的源代码为基础，讲解 RT-Smart 的启动过程。
 
-RT-Smart 与 RT-Thread 的一大区别是使用了 MMU，将用户态和内核态的区分开来。
+## 内核地址空间
 
-在先前的 RTOS 实践中，即使使用 MMU，一般也是简单配置成一一映射的方式，也就是虚拟地址和物理地址相同。但是在 SMART 下这样简单的配置是不够的，因为在 SMART 上操作系统运行在内核态，而用户进程运行在用户态。
-
-### 系统初始化过程
+RT-Smart 与 RT-Thread 的一大区别是用户态和内核态的地址空间被隔离开来。内核运行在内核地址空间，用户进程运行在用户地址空间。由下图可知，RT-Smart 32 位内核运行在地址空间的高地址，而用户程序代码运行在低地址。
 
 ![image-20210512173417892](figures/image-20210512173417892.png)
 
-系统刚启动的时候，内核程序被加载器加载到 `0x60010000` 的位置，但是内核在编译时被链接到 `0xc0010000` 的位置，此时 `MMU` 还没有开启。因此一开始想要使用全局变量的时候，这些虚拟的全局变量的地址需要加上 `PV_OFFSET`（物理地址减去虚拟地址的偏移量）获取实际的物理地址，才能正常使用内存。
+## 系统初始化流程
 
-### MMU 初始化
-
-为了能让内核正常运行在内核地址空间，需要一些初始化对 `MMU` 进行逐步配置，初始化步骤如下：
+上面说到 RT-Smart 将内核搬运到高地址空间运行，为了能让内核正常运行在内核地址空间，需要一些初始化对 `MMU` 进行逐步配置，初始化步骤如下：
 
 1. 使用实际物理地址设置栈，为调用 C 语言函数对 `MMU` 页表进行初始化作准备
 2. 建立从 `0x60010000` 到  `0x60010000`  的原地址映射
 3. 建立从 `0x60010000` 到 `0xc0010000` 的物理地址到内核地址空间的映射
-4. 使能 `MMU`，使地址映射生效，以上要建立两次映射的原因是，如果只建立物理地址空间到内核地址空间的映射，此时程序还运行在 `0x60010000` 的物理空间上，如果此时开启 `MMU`，那么当前程序的地址空间变得无法访问，导致程序 fault
+4. 使能 `MMU`，使地址映射生效，需要建立双重映射的原因是，如果只建立第三步的映射，此时程序还运行在 `0x60010000` 的物理空间上，此时开启 `MMU`，当前程序正在运行的地址空间变得无法访问，导致程序 fault 无法继续运行
 5. 切换到内核地址空间，在内核地址空间重新设置栈
 6. 解除 `0x60010000` 到  `0x60010000`  的原地址映射关系
 
-现在遇到的问题是，没看明白 MMU 表描述符里面内容的具体意义，后面要仔细阅读 armv7 短描述符的意义，看看是如何进行配置的。
+## 启动过程代码详解
+
+系统启动前，内核程序被加载到 `0x60010000` ，但内核在编译时被链接到 `0xc0010000` 的位置，此时 `MMU` 还没有开启。如果此时想要使用全局变量的，就需要将全局变量的地址加上 `PV_OFFSET`（物理地址减去虚拟地址的偏移量）获取实际的物理地址，才能正常访问该全局变量。
 
 
 ```assembly
@@ -48,6 +46,9 @@ stack_start:
 .endr
 stack_top:
 
+/*
+使用 1M 大小的 section 映射，描述符的类型为 unsigned int，占用 4 个字节内存，整个系统地址空间为 4GB，因此需要 4096 个描述符，总共占用内存 16kb。
+*/
 #ifdef RT_USING_USERSPACE
 .data
 .align 14
@@ -65,36 +66,34 @@ _reset:
 
     mov r7, #0x100000
     sub r7, #1
-    mvn r8, r7
+    mvn r8, r7     /* r8: 0xfff0_0000 */
 
     ldr r9, =KERNEL_VADDR_START
 
     ldr r6, =__bss_end
     add r6, r7
-    and r6, r8 //r6 end vaddr align up to 1M
-    sub r6, r9 //r6 is size
+    and r6, r8          /* r6 end vaddr align up to 1M */
+    sub r6, r9          /* r6 is size */
 
-    ldr sp, =stack_top
-    add sp, r5 //use paddr
+    ldr sp, =stack_top  
+    add sp, r5          /* 使用栈的物理地址初始化栈 */
 
     ldr r0, =init_mtbl
     add r0, r5
     mov r1, r6
     mov r2, r5
-    bl init_mm_setup
+    bl init_mm_setup    /* 初始化内存映射表，建立双重映射，即程序加载原地址映射与原地址到内核地址空间映射 */
 
     ldr lr, =after_enable_mmu
     ldr r0, =init_mtbl
     add r0, r5
-    b enable_mmu
+    b enable_mmu        /* 使用初始化后的映射表使能 MMU */
 
 after_enable_mmu:
 #endif
 
-#ifndef SOC_BCM283x
     /* set the cpu to SVC32 mode and disable interrupt */
     cps #Mode_SVC
-#endif
 
     /* disable the data alignment check */
     mrc p15, 0, r1, c1, c0, 0
@@ -102,7 +101,7 @@ after_enable_mmu:
     mcr p15, 0, r1, c1, c0, 0
 
     /* setup stack */
-    bl      stack_setup
+    bl      stack_setup  /* 使用内核空间栈的虚拟地址初始化栈 */
 
     /* clear .bss */
     mov r0,#0                   /* get a zero                       */
@@ -147,9 +146,7 @@ _rtthread_startup:
     .word rtthread_startup
 ```
 
-内存页表初始化函数：
-
-初始化页表前 4k 的内存
+### 双重地址映射函数详解
 
 ```c
 void init_mm_setup(unsigned int *mtbl, unsigned int size, unsigned int pv_off) {
@@ -168,26 +165,38 @@ void init_mm_setup(unsigned int *mtbl, unsigned int size, unsigned int pv_off) {
 }
 ```
 
-使能 MMU：
+该函数初始化了内存映射表，从 0 地址开始，以 `1M` 的粒度扫描整个 `4G` 地址空间，建立两段映射关系：
+
+1. 如果发现虚拟地址在内核地址空间上，则建立从内核地址空间到内核程序加载地址的映射
+2. 如果发现虚拟地址在处于内核程序的加载地址，则建立相对应的原地址映射
+3. 其他地址配置成无效，如下图中的空白部分
+
+配置的映射关系如下图所示：
+
+
+
+![image-20210513182917961](figures/image-20210513182917961.png)
+
+### 使能 MMU
 
 ```assembly
 .align 2
 .global enable_mmu
 enable_mmu:
     orr r0, #0x18
-    mcr p15, 0, r0, c2, c0, 0 //ttbr0
+    mcr p15, 0, r0, c2, c0, 0 // ttbr0
 
-    mov r0, #(1 << 5)         //PD1=1
-    mcr p15, 0, r0, c2, c0, 2 //ttbcr
+    mov r0, #(1 << 5)         // PD1=1
+    mcr p15, 0, r0, c2, c0, 2 // ttbcr
 
     mov r0, #1
-    mcr p15, 0, r0, c3, c0, 0 //dacr
+    mcr p15, 0, r0, c3, c0, 0 // dacr
 
     // invalid tlb before enable mmu
     mov r0, #0
     mcr p15, 0, r0, c8, c7, 0
-    mcr p15, 0, r0, c7, c5, 0   ;//iciallu
-    mcr p15, 0, r0, c7, c5, 6   ;//bpiall
+    mcr p15, 0, r0, c7, c5, 0   ; // iciallu
+    mcr p15, 0, r0, c7, c5, 6   ; // bpiall
 
     mrc p15, 0, r0, c1, c0, 0
     orr r0, #(1 | 4)
@@ -198,9 +207,9 @@ enable_mmu:
     mov pc, lr
 ```
 
-转换 MMU：
+### 切换 MMU
 
-```
+```assembly
 .global switch_mmu
 switch_mmu:
     orr r0, #0x18
@@ -215,6 +224,40 @@ switch_mmu:
     dsb
     isb
     mov pc, lr
+```
+
+### 设置内核空间栈
+
+```assembly
+stack_setup:
+    ldr     r0, =stack_top     /* 获取内核地址空间下的栈地址，然后设置各模式下的栈 */
+
+    @  Set the startup stack for svc
+    mov     sp, r0
+
+    @  Enter Undefined Instruction Mode and set its Stack Pointer
+    msr     cpsr_c, #Mode_UND|I_Bit|F_Bit
+    mov     sp, r0
+    sub     r0, r0, #UND_Stack_Size
+
+    @  Enter Abort Mode and set its Stack Pointer
+    msr     cpsr_c, #Mode_ABT|I_Bit|F_Bit
+    mov     sp, r0
+    sub     r0, r0, #ABT_Stack_Size
+
+    @  Enter FIQ Mode and set its Stack Pointer
+    msr     cpsr_c, #Mode_FIQ|I_Bit|F_Bit
+    mov     sp, r0
+    sub     r0, r0, #RT_FIQ_STACK_PGSZ
+
+    @  Enter IRQ Mode and set its Stack Pointer
+    msr     cpsr_c, #Mode_IRQ|I_Bit|F_Bit
+    mov     sp, r0
+    sub     r0, r0, #RT_IRQ_STACK_PGSZ
+
+    /* come back to SVC mode */
+    msr     cpsr_c, #Mode_SVC|I_Bit|F_Bit
+    bx      lr
 ```
 
 
