@@ -14,9 +14,10 @@ export RTT_CC_PREFIX=arm-linux-musleabi-
 export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 ```
 
-2. 编译项目，生成 elf 格式的可执行文件。 
+2. 编译项目
 
-- scons 编译工程
+- scons 编译工程（编译选项需要加 -g 参数，在 elf 中加入调试信息）
+- 生成 elf 格式的可执行文件
 - 运行 `qemu-dbg.bat` 以调试模式启动 QEMU 模拟
 
 ### 使用调试器
@@ -59,7 +60,7 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 | si      | 运行到下一条汇编指令，会跳转到下一条汇编执行，跟进 bl 命令   |
 | b       | Set breakpoint at specified line or function                 |
 | display | Print value of expression EXP each time the program stops    |
-| p       | Print value of expression EXP                                |
+| p       | Print value of expression EXP，p /x exp ：以 16 进制格式打印目标值 |
 | u       | until 可以当做单次断点，使用 u *0x60000000 跳转到指定地址，u 指令后面跟想要跳转的位置 |
 | x       | x  0x60000000 显示指定地址中的数值，相当于 dump 功能         |
 | q       | 退出 gdb                                                     |
