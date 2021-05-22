@@ -260,5 +260,3 @@ stack_setup:
     bx      lr
 ```
 
-
-

@@ -1,4 +1,4 @@
-# 代码调试方法记录
+# RT-Smart 内核 GDB 调试方法
 
 在开发的过程中，有时没有现成的图形化开发环境，想要进行调试时，需要使用 GDB 直接进行代码调试。本文档记录了以 RT-Thread   `qemu-vexpress-a9` BSP 为例，使用 GDB 对 RT-Smart 进行代码调试的方法。
 
