@@ -1,6 +1,6 @@
 # RT-Smart 内核 GDB 调试方法
 
-在开发的过程中，有时没有现成的图形化开发环境，想要进行调试时，需要使用 GDB 直接进行代码调试。本文档记录了以 RT-Thread   `qemu-vexpress-a9` BSP 为例，使用 GDB 对 RT-Smart 进行代码调试的方法。
+在开发的过程中，有时没有现成的图形化开发环境，想要进行调试时，需要使用 GDB 直接进行代码调试。本文档记录了以 RT-Thread `qemu-vexpress-a9` BSP 为例，使用 GDB 对 RT-Smart 进行代码调试的方法。
 
 ## 准备
 
@@ -129,3 +129,26 @@ b *((char *)_reset + 0xa0000000)
 arm-linux-musleabi-objdump -S rtthread.elf > rtthread.S
 ```
 
+### 预处理
+
+GCC 的“-E”选项可以让编译器在预处理阶段就结束，选项“-o”可以指定输出的文件格式。通过编译器的预处理，可以查看真实参与编译代码的实际情况，便于理解代码。另外在软件测试领域，很多情况下要对原始代码插装，查看预处理后的代码可以有助于理解代码的实际行为。
+
+```shell
+aarch64-linux-gnu-gcc -E test.c -o test.i
+```
+
+### 编译
+
+编译阶段主要是对预处理好的.i 文件进行编译，并生成汇编代码。GCC 首先检查代码是否有语法错误等，然后把代码编译成汇编代码。可以使用“-S”选项来编译。还可以设定不同的优化等级，查看编译器对代码的优化情况。
+
+```shell
+aarch64-linux-gnu-gcc -S test.i -o test.s
+```
+
+### 汇编
+
+汇编阶段是将汇编文件转化成二进制文件，利用“-c”选项就可以生成二进制文件。
+
+```shell
+aarch64-linux-gnu-gcc -c test.s -o test.o
+```
