@@ -67,7 +67,7 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 
 如果打 s、n 指令的话，必须要有源代码支持，如果没有源代码支持，只能打出 si、ni，这里  si ni 是针对反汇编指令来说的，如果有源代码的话就可以使用 s、n 指令。
 
-### 断点操作命令
+### 信息查询与断点操作
 
 | 命令           | 说明                                 |
 | -------------- | ------------------------------------ |
@@ -75,6 +75,7 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 | dis + 断点编号 | 使指定编号的断点 disable             |
 | ena + 断点编号 | 使指定编号的断点 enable              |
 | del + 断点编号 | 删除指定编号的断点                   |
+| info files    | 查询加载的符号表文件                 |
 
 ### 查看反汇编
 
@@ -152,3 +153,36 @@ aarch64-linux-gnu-gcc -S test.i -o test.s
 ```shell
 aarch64-linux-gnu-gcc -c test.s -o test.o
 ```
+
+### 读取符号表
+
+```shell
+aarch64-linux-gnu-readelf -S vmlinux
+```
+
+在进行调试时，如下情况可能导致需要重新加载符号表：
+
+- 在 aarch64 下切换异常级别时
+- MMU 开启前后，链接地址与加载地址不符时
+
+此时可以使用 readelf 命令查看可执行文件中符号的链接位置：
+
+![image](https://user-images.githubusercontent.com/22132180/125370274-acee9c00-e3b0-11eb-9f56-12a09b4e8195.png)
+
+如果发现加载地址与链接地址不符，可以算出 PV_OFFSET，然后使用 add-symbil-file 命令将符号加载到代码实际运行的地址上，例如：
+
+计算偏移量的方式如下：
+`0x80080000− 0xffff000010080000 = −0xfffeffff90000000`
+ 
+DS-5 重新加载符号表命令如下：
+`add-symbol-file /home/vmlinux -0xfffeffff90000000`
+
+在 DS-5 中 add-symbol-file 命令的格式如下：
+
+`add-symbol-file filename [offset] [-s section address]...`
+
+而 GDB 中的 add-symbol-file 命令如下：
+
+`add-symbol-file filename [ textaddress ] [-s section address ... ]`
+
+其中 textaddress 指的是文件镜像将要加载的地址。因此，DS-5 和 GDB 中的参数有区别。
