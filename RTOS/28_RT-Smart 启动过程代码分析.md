@@ -309,7 +309,7 @@ void rt_hw_mmu_setup_early(unsigned long *tbl0, unsigned long *tbl1, unsigned lo
     mov x20, x0
 
     mov x1, x21
-    bl mmu_tcr_init            /* 配置 MMU 的基础属性，如地址划分、页大小等等 */
+    bl mmu_tcr_init            /* 配置 MMU 的基础属性，如虚拟地址位数、页大小、页属性等 */
 
     mov x0, x20
     mov x1, x21
@@ -330,20 +330,20 @@ void rt_hw_mmu_setup_early(unsigned long *tbl0, unsigned long *tbl1, unsigned lo
     orr x1, x1, #(1 << 12)      /* I */
     orr x1, x1, #(1 << 2)       /* C */
     orr x1, x1, #(1 << 0)       /* M */
-    msr sctlr_el1, x1           /* 使能 MMU */
+    msr sctlr_el1, x1           /* 使能 MMU，还可以执行下一条指令，因为低位地址进行了一一映射 */
 
-    dsb sy                      /* 使能 MMU 后还可以执行下一条指令，因为低位地址进行了一一映射 */
-    isb sy
-    ic ialluis
+    dsb sy                      /* 使能 MMU 后 */
+    isb sy                      /* 指令屏障指令，在执行下一条指令前，所有的指令都已经完成 */
+    ic ialluis                  /* 无效所有的指令缓存 */                       
     dsb sy
     isb sy
-    tlbi vmalle1
+    tlbi vmalle1                /* 无效所有 el1 的 tlb 转换表 */
     dsb sy
     isb sy
-    ret                          /* 返回到虚拟地址的 after_mmu_enable 函数，自此操作系统完成到虚拟地址的切换  */
+    ret                         /* 返回到虚拟地址的 after_mmu_enable 函数，自此操作系统完成到虚拟地址的切换  */
 
 after_mmu_enable:
-    mrs x0, tcr_el1              /* 关闭 ttbr0 上的映射，操作系统将不再访问低位地址 */
+    mrs x0, tcr_el1             /* 关闭 ttbr0 上的映射，操作系统将不再访问低位地址 */
     orr x0, x0, #(1 << 7)
     msr tcr_el1, x0
     msr ttbr0_el1, xzr
@@ -352,7 +352,7 @@ after_mmu_enable:
     mov     x0, #1
     msr     spsel, x0
     adr     x1, __start
-    mov     sp, x1               /* 设置 sp_el1 为 _start 符号地址 */
+    mov     sp, x1              /* 设置 sp_el1 为 _start 符号地址 */
 
     b  rtthread_startup
 ```
