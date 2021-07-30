@@ -19,7 +19,7 @@ RT-Smart 与 RT-Thread 的一大区别是用户态和内核态的地址空间被
 5. 切换到内核地址空间，在内核地址空间重新设置栈
 6. 解除 `0x60010000` 到  `0x60010000`  的原地址映射关系
 
-## 启动过程代码详解
+## 启动过程代码详解（ARMv7）
 
 系统启动前，内核程序被加载到 `0x60010000` ，但内核在编译时被链接到 `0xc0010000` 的位置，此时 `MMU` 还没有开启。如果此时想要使用全局变量的，就需要将全局变量的地址加上 `PV_OFFSET`（物理地址减去虚拟地址的偏移量）获取实际的物理地址，才能正常访问该全局变量。
 
@@ -260,8 +260,100 @@ stack_setup:
     bx      lr
 ```
 
-## 总结
-
 与先前的 rt-thread 宏内核相比，整个 SMART 的启动过程主要多了对 MMU 的配置，这是因为 SMART 是一个区分用户态和内核态的操作系统。用户态进程与操作系统内核运行在各自私有的地址空间，为了实现这样的功能，要利用 MMU 提供的虚拟内存机制做更进一步的虚拟地址空间管理。
 
 在 SMART 操作系统中，内存管理部分是比较复杂的，后续针对这一块还需要多多研究。
+
+## 启动过程代码详解（ARMv8）
+
+ARMv8 架构的 MMU 初始化过程与上述内容稍有不同，原因是在 ARMv8 中可以利用  TTBR0_EL1 和 TTBR1_EL1 寄存器来区分对高位地址和低位地址的访问。在操作系统启动初期。
+
+### MMU 初始化
+
+对 MMU 进行初始化，同 32 位 SMART 启动一样，也要进行两次映射，这样才能保证在开启 MMU 之后，后续指令可以正常执行。
+
+```c
+void rt_hw_mmu_setup_early(unsigned long *tbl0, unsigned long *tbl1, unsigned long size, unsigned long pv_off)
+{
+    int ret;
+    unsigned long va = KERNEL_VADDR_START;
+    unsigned long count = (size + ARCH_SECTION_MASK) >> ARCH_SECTION_SHIFT;
+    unsigned long normal_attr = MMU_MAP_CUSTOM(MMU_AP_KAUN, NORMAL_MEM);
+
+    /* 创建从高位虚拟地址（以 0xffff 起始的地址）到物理地址的映射 */
+    ret = armv8_init_map_2M(tbl1 , va, va + pv_off, count, normal_attr);
+    if (ret != 0)
+    {
+        while (1);
+    }
+
+    /* 创建物理地址到物理地址的一一对应映射，保证在跳转到链接高位的函数前，指令仍然可以继续执行 */
+    ret = armv8_init_map_2M(tbl0, va + pv_off, va + pv_off, count, normal_attr);
+    if (ret != 0)
+    {
+        while (1);
+    }
+}
+```
+
+### 切换到虚拟地址运行
+
+初始化的目的是，使得系统可以从物理地址运行逐步迁移到以 0xFFFF 起始的虚拟地址运行，这需要一个过度的过程，可以观察如下代码了解如何实现从物理地址到虚拟地址的切换。
+
+```asm
+/* jump to C code, should not return */
+.L__jump_to_entry:
+    bl get_free_page           /* 获取空闲页，用于存放页表 */
+    mov x21, x0
+    bl get_free_page           /* 获取空闲页，用于存放页表 */
+    mov x20, x0
+
+    mov x1, x21
+    bl mmu_tcr_init            /* 配置 MMU 的基础属性，如地址划分、页大小等等 */
+
+    mov x0, x20
+    mov x1, x21
+
+    msr ttbr0_el1, x0          /* 将页表放入 ttbr0_el1 寄存器，配置低位地址映射 */
+    msr ttbr1_el1, x1          /* 将页表放入 ttbr1_el1 寄存器，配置高位地址映射 */
+    dsb sy                     /* 数据同步内存屏障，确保在下一个指令执行前，所有的存储器访问都已经完成 */
+
+    ldr x2, =0x40000000        /* 为内核映射 1G 内存空间          */
+    ldr x3, =0x1000060000000   /* 设置 PV_OFFSET 到 x3 寄存器    */
+    bl rt_hw_mmu_setup_early   /* 调用 MMU 配置函数，初始化页表    */
+
+    ldr x30, =after_mmu_enable /* 将 after_mmu_enable 函数的地址存入 LR 寄存器，这是一个高位虚拟地址 */
+                              
+    mrs x1, sctlr_el1         
+    bic x1, x1, #(3 << 3)       /* dis SA, SA0 */
+    bic x1, x1, #(1 << 1)       /* dis A */
+    orr x1, x1, #(1 << 12)      /* I */
+    orr x1, x1, #(1 << 2)       /* C */
+    orr x1, x1, #(1 << 0)       /* M */
+    msr sctlr_el1, x1           /* 使能 MMU */
+
+    dsb sy                      /* 使能 MMU 后还可以执行下一条指令，因为低位地址进行了一一映射 */
+    isb sy
+    ic ialluis
+    dsb sy
+    isb sy
+    tlbi vmalle1
+    dsb sy
+    isb sy
+    ret                          /* 返回到虚拟地址的 after_mmu_enable 函数，自此操作系统完成到虚拟地址的切换  */
+
+after_mmu_enable:
+    mrs x0, tcr_el1              /* 关闭 ttbr0 上的映射，操作系统将不再访问低位地址 */
+    orr x0, x0, #(1 << 7)
+    msr tcr_el1, x0
+    msr ttbr0_el1, xzr
+    dsb sy
+
+    mov     x0, #1
+    msr     spsel, x0
+    adr     x1, __start
+    mov     sp, x1               /* 设置 sp_el1 为 _start 符号地址 */
+
+    b  rtthread_startup
+```
+
