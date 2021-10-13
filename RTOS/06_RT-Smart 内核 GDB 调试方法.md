@@ -173,7 +173,7 @@ aarch64-linux-gnu-readelf -S vmlinux
 
 计算偏移量的方式如下：
 `0x80080000− 0xffff000010080000 = −0xfffeffff90000000`
- 
+
 DS-5 重新加载符号表命令如下：
 `add-symbol-file /home/vmlinux -0xfffeffff90000000`
 
@@ -186,3 +186,19 @@ DS-5 重新加载符号表命令如下：
 `add-symbol-file filename [ textaddress ] [-s section address ... ]`
 
 其中 textaddress 指的是文件镜像将要加载的地址。因此，DS-5 和 GDB 中的参数有区别。
+
+## 利用返回 uboot 调试代码
+
+可以使用 ret 指令从用户代码中返回到 uboot 来进行调试，可以用于判断代码运行到什么位置，示例代码如下所示：
+
+```c
+__start:
+
+    ret   /* 可以返回到 uboot */
+  
+    /* read cpu id, stop slave cores */
+    mrs     x1, mpidr_el1           /* MPIDR_EL1: Multi-Processor Affinity Register */
+    and     x1, x1, #3
+    cbz     x1, .L__cpu_0           /* .L prefix is the local label in ELF */
+```
+
