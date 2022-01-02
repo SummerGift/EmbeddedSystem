@@ -1,6 +1,6 @@
 # ELF 应用程序加载运行过程分析
 
-在用户态应用程序处理的任务中，elf 加载运行是一个比较重要的步骤，下面就分析一下在 RT-SMART 操作系统中，想要将一个应用程序运行起来要经过哪些步骤。
+在用户态应用程序处理的任务中，elf 加载运行是一个比较重要的步骤，下面就分析一下在 rt-smart  操作系统中，想要将一个应用程序运行起来要经过哪些步骤。
 
 ## ELF 格式介绍
 
@@ -14,7 +14,7 @@ RT-SMART 同样也使用 ELF 作为可执行文件的格式，下面简单介绍
 
 上图展示了 elf 文件的重要组成部分：
 
-- elf 文件头，除了用于标识ELF文件的几个字节之外，ELF头还包含了有关文件类型和大小的有关信息，以
+- elf 文件头，除了用于标识ELF文件的几个字节之外，ELF头还包含了有关文件类型和大小的有关信息，
 
   及文件加载后程序执行的入口点信息。
 
@@ -32,50 +32,29 @@ RT-SMART 同样也使用 ELF 作为可执行文件的格式，下面简单介绍
 
 ## 关键数据结构
 
-### elf 加载数据结构
+想要理解应用程序的加载运行过程，就必须要先了解 ELF 文件中的关键数据结构，知道可以通过 ELF 文件获取那些程序加载所必须的关键信息，例如文件类型、目标体系架构、版本号、程序入口点以及程序运行所需要的数据段存储在什么位置等等信息。这些信息都存放在 ELF 的相关数据结构中，那么现在就先了解一下 ELF 文件的相关数据结构吧。
 
-下面是在 elf 加载过程上下文数据结构，这个结构中包括了 eheader、pheader 和 sheader 三个 elf 的关键数据结构。
+下面是在 ELF 加载过程上下文数据结构，这个结构中包括了 eheader、pheader 和 sheader 三个 elf 的关键数据结构。
 
-```c
-struct elf_load_context
-{
-    int fd;
-
-    int len;
-    uint8_t *load_addr;
-
-    struct rt_lwp *lwp;
-    struct process_aux *aux;
-
-    rt_mmu_info *m_info;
-
-    Elf_Ehdr eheader; /* elf 头表 */
-    Elf_Phdr pheader; /* 程序头表 */
-    Elf_Shdr sheader; /* 节头表   */
-
-    /* 0 for text section and 1 for data section */
-    struct map_range user_area[2]; 
-};
-```
 ### elf 头表
 
 ```c
 typedef struct
 {
-    unsigned char e_ident[EI_NIDENT]; /* Magic number and other info */
-    Elf64_Half    e_type;         /* Object file type */
-    Elf64_Half    e_machine;      /* Architecture */
-    Elf64_Word    e_version;      /* Object file version */
-    Elf64_Addr    e_entry;        /* 程序入口点 */
-    Elf64_Off     e_phoff;        /* 程序头表在二进制文件中的偏移量 */
-    Elf64_Off     e_shoff;        /* 节头表所在的偏移量 */
-    Elf64_Word    e_flags;        /* 特定于处理器的标志 */
-    Elf64_Half    e_ehsize;       /* 了ELF头的长度，单位为字节 */
-    Elf64_Half    e_phentsize;    /* 了程序头表中一项的长度，单位为字节（所有项的长度都相同） */
-    Elf64_Half    e_phnum;        /* 程序头表中项的数目 */
-    Elf64_Half    e_shentsize;    /* 节头表中一项的长度，单位为字节（所有项的长度都相同） */
-    Elf64_Half    e_shnum;        /* 节头表中项的数目 */
-    Elf64_Half    e_shstrndx;     /*包含各节名称的字符串表在节头表中的索引位置 */
+    unsigned char e_ident[EI_NIDENT]; /* 前四个字节为 0x7f E L F，其他的字节位置都有特定的语义 */
+    Elf64_Half    e_type;             /* 用于区分 ELF 的文件类型，例如可重定位、可执行、动态库、core dump 文件 */
+    Elf64_Half    e_machine;          /* 指定了文件所需的体系结构 */
+    Elf64_Word    e_version;          /* 保存了版本信息，用于区分不同的 ELF 变体，目前该规范只定义了版本 1 */
+    Elf64_Addr    e_entry;            /* 程序入口点 */
+    Elf64_Off     e_phoff;            /* 程序头表在二进制文件中的偏移量 */
+    Elf64_Off     e_shoff;            /* 节头表所在的偏移量 */
+    Elf64_Word    e_flags;            /* 特定于处理器的标志 */
+    Elf64_Half    e_ehsize;           /* 指定了ELF头的长度，单位为字节 */
+    Elf64_Half    e_phentsize;        /* 指定了程序头表中一项的长度，单位为字节（所有项的长度都相同） */
+    Elf64_Half    e_phnum;            /* 指定了程序头表中项的数目 */
+    Elf64_Half    e_shentsize;        /* 指定节头表中一项的长度，单位为字节（所有项的长度都相同） */
+    Elf64_Half    e_shnum;            /* 指定节头表中项的数目 */
+    Elf64_Half    e_shstrndx;         /* 包含各节名称的字符串表在节头表中的索引位置 */
 } Elf64_Ehdr;
 ```
 
@@ -84,14 +63,14 @@ typedef struct
 ```c
 typedef struct
 {
-    Elf64_Word    p_type;         /* Segment type */
-    Elf64_Word    p_flags;        /* Segment flags */
-    Elf64_Off     p_offset;       /* Segment file offset */
-    Elf64_Addr    p_vaddr;        /* Segment virtual address */
-    Elf64_Addr    p_paddr;        /* Segment physical address */
-    Elf64_Xword   p_filesz;       /* Segment size in file */
-    Elf64_Xword   p_memsz;        /* Segment size in memory */
-    Elf64_Xword   p_align;        /* Segment alignment */
+    Elf64_Word    p_type;             /* 当前项描述的段的种类，例如可装载段、动态链接、程序解释等段类型 */
+    Elf64_Word    p_flags;            /* 保存了标志信息，定义了该段的访问权限，RWX */
+    Elf64_Off     p_offset;           /* 给出了所描述段在文件中的偏移量（从二进制文件起始处开始计算，单位为字节） */
+    Elf64_Addr    p_vaddr;            /* 给出了段的数据映射到虚拟地址空间中的位置（对于可装载段类型） */
+    Elf64_Addr    p_paddr;            /* 只支持物理寻址，不支持虚拟寻址的系统，将使用 p_paddr 保存信息 */
+    Elf64_Xword   p_filesz;           /* 指定了段在二进制文件中的长度 */
+    Elf64_Xword   p_memsz;            /* 制定了段在虚拟地址空间中的长度（单位为字节），与文件中物理的长度差值可通过阶段数据或者填充 0 字节来补偿 */
+    Elf64_Xword   p_align;            /* 指定了段在内存和二进制文件中对其的方式（p_vaddr 和 p_offset 地址必须是模 p_align 的，也就是 p_align 的倍数），例如 p_align 的值为 0x1000 = 4096，这意味着段必须对其到 4KB 页 */
 } Elf64_Phdr;
 ```
 
@@ -100,16 +79,106 @@ typedef struct
 ```c
 typedef struct
 {
-    Elf64_Word    sh_name;        /* Section name (string tbl index) */
-    Elf64_Word    sh_type;        /* Section type */
-    Elf64_Xword   sh_flags;       /* Section flags */
-    Elf64_Addr    sh_addr;        /* Section virtual addr at execution */
-    Elf64_Off     sh_offset;      /* Section file offset */
-    Elf64_Xword   sh_size;        /* Section size in bytes */
-    Elf64_Word    sh_link;        /* Link to another section */
-    Elf64_Word    sh_info;        /* Additional section information */
-    Elf64_Xword   sh_addralign;   /* Section alignment */
-    Elf64_Xword   sh_entsize;     /* Entry size if section holds table */
+    Elf64_Word    sh_name;            /* 指定了节的名称，其值不是字符串本身，而是字符串表的一个索引 */
+    Elf64_Word    sh_type;            /* 指定了节的类型，例如不可用、保存程序相关信息、符号表、包含字符串表的节、重定位信息、散列表、动态链接信息等类型 */
+    Elf64_Xword   sh_flags;           /* 节是否可写（SHF_WRITE），是否将为其分配虚拟内存（SHF_ALLOC），节是否包含可执行的机器代码（SHF_EXECINSTR） */
+    Elf64_Addr    sh_addr;            /* 指定节映射到虚拟地址空间中的位置 */
+    Elf64_Off     sh_offset;          /* 指定了节在文件中的开始位置 */
+    Elf64_Xword   sh_size;            /* 指定了节的长度，单位为字节 */
+    Elf64_Word    sh_link;            /* 引用另一个节头表项，可能根据节类型而进行不同的解释 */
+    Elf64_Word    sh_info;            /* 与上一项联用 */
+    Elf64_Xword   sh_addralign;       /* 指定了节数据在内存中对齐的方式 */
+    Elf64_Xword   sh_entsize;         /* 指定了节中各数据项的长度，前提是这些数据项的长度都相同，例如字符串表 */
 } Elf64_Shdr;
 ```
+
+在 rt-smart  实际编码实现的过程中，为了方便数据传递，设计了一个包含上述三种数据类型的结构，利用该数据结构可以使加载过程实现更加简洁易懂，如下所示：
+
+```c
+struct elf_load_context
+{
+    int fd;                     /* 应用程序文件 fd */
+    int len;                    /* 用于临时使用的 len */
+    uint8_t *load_addr;         /* 用于临时使用的加载地址 */
+
+    struct rt_lwp *lwp;         /* 进程句柄 */
+    struct process_aux *aux;    /* 进程辅助信息句柄*/
+
+    rt_mmu_info *m_info;        /* 进程 mmu 信息 */
+
+    Elf_Ehdr eheader;           /* elf 头表 */
+    Elf_Phdr pheader;           /* 程序头表 */
+    Elf_Shdr sheader;           /* 节头表   */
+
+    struct map_range user_area[2]; /* 0 for text section and 1 for data section */
+};
+```
+
+### ELF 标准节
+
+ELF 标准定义了若干固定名称的节。这些用于执行大多数目标文件所需的标准任务。所有名称都从点开始，以便与用户定义节或非标准节相区分，最重要的标准节如下所示：
+
+- .bss 保存程序未初始化的数据节，在程序开始运行前填充 0 字节。
+- .data 包含已经初始化的程序数据。例如，预先初始化的结构，其中在编译时填充了静态数据。这些数据可以在程序运行期间更改。
+- .rodata 保存了程序使用的只读数据，不能修改，例如字符串。
+- .dynamic 和 .dynstr 保存了动态信息。
+- .interp 保存了程序解释器的名称，形式为字符串。
+- .shstrtab 包含了一个字符串表，定义了节名称。
+- .strtab 保存了一个字符串表，主要包含了符号表需要的各个字符串。
+- .symtab 保存了二进制文件的符号表。
+- .init 和 .fini 保存了程序初始化和结束时执行的机器指令。这两个节的内容通常是由编译器及其辅助工具自动创建的，主要是为程序建立一个适当的运行时环境。
+- .text 保存了主要的机器指令。
+
+有了以上基础概念，就可以来探索真正的代码实现了。
+
+## 探索程序加载代码实现
+
+执行一个新的应用程序功能由 lwp_execve 函数来实现，该函数会初始化好一个进程所需要的运行环境，然后在该环境中启动第一个线程，也就是 main 线程。
+
+暂且先不关注进程 PID 申请以及的 mmu 表初始化等准备工作，将注意力集中在 lwp_load 函数上。该函数将执行如下操作：
+
+- 打开 elf 文件，返回文件 fd
+- 调用 load_elf 函数开始执行应用程序加载
+
+在 load_elf 函数中，将执行如下操作：
+
+1. 检查 elf 头，判断其魔数、架构类型、版本号等是否符合要求
+2. 判断是静态加载还是动态加载
+3. 检查程序入口地址是否为有效的用户态地址
+4. 遍历读取程序头表以及程序复制信息，将其加载到进程的用户空间里
+5. 遍历读取节头表，根据节头表中的信息，计算在用户态需要需要分配多大的地址空间用于存放 text 段以及 data 段
+6. 根据上一步骤的计算，修改进程的映射表，真正为数据段分配用户态地址空间
+7. 遍历节头表，程序运行所需要数据段加载到用户地址空间中
+
+通过上面的操作，ELF 文件中所有关于程序启动运行所需的数据就都准备好了，接下来就可以在此基础上启动第一个线程，也就是 main 线程了。相关的代码细节在这里就不做赘述了，源代码中都添加了详尽的注释，可以自行查看。
+
+## 总结
+
+用户态进程代码量较大，同时由于复杂度过高也不容易理解，现在代码经过完善，复杂度降低以后，可读性方面有了巨大提升。想要深入了解用户态的相关实现，还需要至少了解另外两个主题：
+
+- 进程切换过程中底层架构级别的汇编代码
+- 进程资源管理相关内容，例如 pid、tid 的分配，用户态内存空间映射等
+
+后续还需要在深挖继续总结上述内容。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
