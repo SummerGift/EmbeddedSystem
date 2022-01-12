@@ -266,6 +266,25 @@ stack_setup:
 
 ## 启动过程代码详解（ARMv8）
 
+### 页表初始化过程
+
+```assembly
+.L__in_el1:                        /* 清空早期使用的两个页表 */
+    adr x1, __start                /* 将代码段的地址写入 x1，在 x1 中暂存该地址，该地址也是栈的顶端 */
+    ldr x0, =~0x1fffff             /* 向 x0 存入 2M 地址对齐掩码  */
+    and x0, x1, x0                 /* 将 x1 中存放的地址向下 2M 对齐，存入 x0 */     
+    add x2, x0, #0x2000            /* 将 x0 增加 8k并存入 x2，注意：早期版本这里使用了 x1 存放计算后的值，会导致在本段代码最后一行读取 x1 的值作为栈时，导致设置了错误的栈，进而导致后续调用 c 函数的过程中程序运行错误 */
+.L__clean_pd_loop:
+    str     xzr, [x0], #8          /* 清空从 x0 - x2 之间 8k 的地址空间，用作页表*/
+    cmp     x0, x2
+    bne     .L__clean_pd_loop
+
+    adr     x19, .L__in_el1
+    ldr     x8, =.L__in_el1
+    sub     x19, x19, x8            /* get PV_OFFSET            */
+    mov     sp, x1                  /* in EL1. Set sp to _start */
+```
+
 ARMv8 架构的 MMU 初始化过程与上述内容稍有不同，原因是在 ARMv8 中可以利用  TTBR0_EL1 和 TTBR1_EL1 寄存器来区分对高位地址和低位地址的访问。在操作系统启动初期。
 
 ### MMU 初始化
