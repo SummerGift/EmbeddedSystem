@@ -264,18 +264,3 @@ rt_cpu_set_thread_idr:
     msr tpidr_el0, x0
     ret
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
