@@ -287,7 +287,7 @@ stack_setup:
 
 ARMv8 架构的 MMU 初始化过程与上述内容稍有不同，原因是在 ARMv8 中可以利用  TTBR0_EL1 和 TTBR1_EL1 寄存器来区分对高位地址和低位地址的访问。在操作系统启动初期。
 
-### MMU 初始化
+### MMU 早期初始化
 
 对 MMU 进行初始化，同 32 位 SMART 启动一样，也要进行两次映射，这样才能保证在开启 MMU 之后，后续指令可以正常执行。
 
@@ -375,4 +375,31 @@ after_mmu_enable:
 
     b  rtthread_startup
 ```
+
+### 初始化物理页管理器
+
+`rt_page_init` 函数会初始化页表管理器，用于管理物理内存，从如下代码可以看出，物理内存的范围为内核地址空间的 16 M 到 128M 的位置。
+
+```c
+#define HEAP_END        ((size_t)KERNEL_VADDR_START + 16 * 1024 * 1024)
+#define PAGE_START      HEAP_END
+#define PAGE_END        ((size_t)KERNEL_VADDR_START + 128 * 1024 * 1024)
+
+rt_region_t init_page_region = {
+  PAGE_START,
+  PAGE_END,
+};
+```
+
+系统中有相当多的地方会使用物理页申请和释放，这里有 128M 的限制，其实也就意味着不能申请到更多内存了。
+
+### MMU 初始化
+
+早期 MMU 初始化帮助系统从物理地址切换到虚拟地址运行， `rt_hw_mmu_setup`  函数将重新初始化内核的页表，将内核地址空间前 256M 进行映射，作为内核的地址空间。
+
+rt_hw_mmu_map_init
+
+arch_kuser_init
+
+以及 ioremap 还需要继续补充。
 

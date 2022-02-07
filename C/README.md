@@ -1213,8 +1213,6 @@ void rt_thread_idle_sethook(void (*hook)(void))
 
 4.结合函数的实质，函数指针其实就是一个普通变量，这个普通变量的类型是函数指针变量类型，他的值就是某个函数的地址（也就是他的函数名这个符号在编译器中对应的值）。
 
- 
-
 ### 5.2.1 函数指针的书写和分析方法
 
 1.C语言本身是强类型语言（每个变量都有自己的变量类型），编译器可以帮我们做严格的类型检查。
@@ -1229,9 +1227,9 @@ void rt_thread_idle_sethook(void (*hook)(void))
 
 5.写一个复杂的函数指针的实例： char *strcpy(char *dest ,const char *src);
 
-对应的函数指针就是： char *(*pfunc)(char *dest,const char *src);
+对应的函数指针就是： `char *(*pfunc)(char *dest,const char *src);`
 
-函数原型是：         char *(*)( char *, const char * );
+函数原型是：         `char *(*)( char *, const char * );`
 
 ### 5.2.1 typedef关键字的用法
 
