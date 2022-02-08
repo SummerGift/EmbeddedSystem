@@ -289,9 +289,18 @@ ARMv8 架构的 MMU 初始化过程与上述内容稍有不同，原因是在 AR
 
 ### MMU 早期初始化
 
-对 MMU 进行初始化，同 32 位 SMART 启动一样，也要进行两次映射，这样才能保证在开启 MMU 之后，后续指令可以正常执行。
+对 MMU 进行初始化，同 ARMv7 启动一样，也要进行两次映射，这样才能保证在开启 MMU 之后，后续指令可以正常执行。
 
 ```c
+/**
+ * This function creates two early page tables, one for the mapping of high virtual addresses
+ * to physical addresses and one for the one-to-one mapping of virtual addresses to physical addresses.  
+ *
+ * @param tbl0 user space address page table
+ * @param tbl1 kernel space address page table
+ * @param size mapping size
+ * @param pv_off Offset from a virtual address to a physical address
+ */
 void rt_hw_mmu_setup_early(unsigned long *tbl0, unsigned long *tbl1, unsigned long size, unsigned long pv_off)
 {
     int ret;
@@ -314,6 +323,18 @@ void rt_hw_mmu_setup_early(unsigned long *tbl0, unsigned long *tbl1, unsigned lo
     }
 }
 ```
+
+很明显在 ARMv8 中建立双重映射的方式与 ARMv7 中不同，在 ARMv8 中使用了两张页表，而 v7 中只用了一张页表，这是架构差异导致的。在 ARMv8 中访问低位地址默认会使用 TTBR0_EL1 指向的页表，而访问高位地址默认会使用 TTBR1_EL1 指向的页表。
+
+同时可以参考该函数被调用时的代码，可以知道在早期建立的虚拟地址映射的大小为 1G。
+
+```asm
+ldr x2, =0x40000000             /* map 1G memory for kernel space */
+mov x3, x19                     /* set PV_OFFSET to x3 reg        */
+bl rt_hw_mmu_setup_early
+```
+
+早期页表的映射是比较粗略的，在系统启动后内核还会创建更精细的页表，不过早期粗略的页表也不是完全没用了，后续该 CPU 的第二个核心启动时，就可以复用该页表而不需要再次初始化了。等到所有的核心都启动完毕后，早期的粗略页表就完全不会再次被使用了。
 
 ### 切换到虚拟地址运行
 
@@ -378,7 +399,7 @@ after_mmu_enable:
 
 ### 初始化物理页管理器
 
-`rt_page_init` 函数会初始化页表管理器，用于管理物理内存，从如下代码可以看出，物理内存的范围为内核地址空间的 16 M 到 128M 的位置。
+`rt_page_init` 函数会初始化页表管理器，用于管理物理内存，从如下代码可以看出，物理内存的范围为内核地址空间的 16 M 到 128M 的位置，该函数的详细实现原理参考[《RT-Smart 物理页管理详解》](25_RT-Smart 物理页管理详解.md)。
 
 ```c
 #define HEAP_END        ((size_t)KERNEL_VADDR_START + 16 * 1024 * 1024)
@@ -391,15 +412,51 @@ rt_region_t init_page_region = {
 };
 ```
 
-系统中有相当多的地方会使用物理页申请和释放，这里有 128M 的限制，其实也就意味着不能申请到更多内存了。
+这里使用的是虚拟地址，但实际上与物理地址是一一对应的，根据 `PV_OFFSET` 就可以很方便地找到对应的物理地址 。这里只是将可以用于被页管理器管理的地址空间加入到页管理器，并不牵扯到内存的映射和解映射，原因很简单，通过 `PV_OFFSET` 就可以很方便地解决问题。
 
-### MMU 初始化
+系统中有很多地方会使用到物理页的申请和释放，这里有 128M 的限制，其实也就意味着不能申请到更多内存了。
+
+### 内核页表再初始化
+
+在系统切换到虚拟地址运行前，我们已经进行过 MMU 的早期初始化，但那时的映射方式是非常粗略的，后续继续使用该页表是不合适的，因此需要重新初始化内核态地址空间的页表。那用户态的页表怎样处理呢，暂时不用关心，因为每个进程都有独立的页表，后续创建相应的进程后，会给每个进程分配独立的页表。
 
 早期 MMU 初始化帮助系统从物理地址切换到虚拟地址运行， `rt_hw_mmu_setup`  函数将重新初始化内核的页表，将内核地址空间前 256M 进行映射，作为内核的地址空间。
 
-rt_hw_mmu_map_init
+```c
+struct mem_desc platform_mem_desc[] = 
+{
+    {
+        KERNEL_VADDR_START, KERNEL_VADDR_START + 0x0fffffff, 
+        KERNEL_VADDR_START + PV_OFFSET, NORMAL_MEM
+    }
+};
 
-arch_kuser_init
+void rt_hw_mmu_setup(struct mem_desc *mdesc, int desc_nr)
+{
+    /* set page table */
+    for (; desc_nr > 0; desc_nr--)
+    {
+        rt_hw_mmu_setmtt(mdesc->vaddr_start, mdesc->vaddr_end,
+                         mdesc->paddr_start, mdesc->attr);
+        mdesc++;
+    }
+    rt_hw_cpu_dcache_ops(RT_HW_CACHE_FLUSH, (void *)MMUTable, sizeof MMUTable);
+    kernel_mmu_switch((unsigned long)MMUTable);
+}
+```
 
-以及 ioremap 还需要继续补充。
+从上面的实现可以看出，内核实际上只映射了 256 M 的地址空间。
+
+### 动态申请地址空间初始化
+
+内核中指定了部分地址空间用于给内核动态分配，这部分内存由 `rt_hw_mmu_map_init` 函数来指定，代码如下：
+
+```c
+rt_hw_mmu_map_init(&mmu_info, (void *)0xfffffffff0000000, 0x10000000, MMUTable, PV_OFFSET);
+```
+
+从上面的代码可以看出，指定了内核地址空间一个高位地址 `0xfffffffff0000000` 开始的 256M 空间用作动态申请与释放。这部分地址空间后续可以用于 ioremap 以及 share memory 时使用。
+
+需要申请地址空间时，就使用 `rt_hw_mmu_map` 和 `rt_hw_mmu_unmap` 这两个函数来进行地址空间的申请和释放。
+
 
