@@ -173,7 +173,7 @@ int整形即整数类型，这个整就体现在他和CPU本身的数据位宽�
 
 内存的对齐访问不是逻辑的问题，是硬件的问题，从硬件角度来说，32位的内存它的0 1 2 3四个单元本身逻辑上就有相关性，这4个字节组合起来当做一个int硬件上就是合适的，效率就高。对齐访问很配合硬件，所以效率很高，非对齐访问因为和硬件本身不搭配，所以效率不高。因为兼容性的问题，一般硬件也提供非对齐访问，但是效率要低很多。
 
-2.4 C语言如何操作内存
+## 2.4 C语言如何操作内存
 
 ### 2.4.1 C语言对内存地址的封装（变量名、数据类型、函数名的意义）
 
@@ -395,7 +395,7 @@ Void (*pFunc)(void);  //函数指针，指向void pfunc(void)这类函数
 
 使用这样的结构体就可以实现面向对象，这样包含了函数指针的结构体就类似于面向对象中的class,结构体中的函数指针类似于class中的成员方法。
 
-2.6 内存管理之栈
+## 2.6 内存管理之栈
 
 ### 2.6.1 什么是栈
 
@@ -694,7 +694,7 @@ C语言的移位要取决于数据类型。
 	#define CLEAR_NTH_BIT(x, n) (x & ~((1U)<<(n-1)))
 
 
-	
+​	
 
 4.2.6.2、截取变量的部分连续位。例如：变量0x88, 也就是10001000b，若截取第2～4位，则值为：100b = 4 
 
@@ -1513,27 +1513,92 @@ int num=atoi(str);
 
 3.编译器考虑结构体存放时，以满足以上两点要求的最少内存需要的排布来算。
 
-### 6.3.7 GCC的对齐指令
+### 6.3.7 GCC 的对齐指令
 
 GCC支持但不推荐的对齐指令：#pragma pack()   #pragma pack(n) (n=1/2/4/8)
 
-(1)#pragma是用来指挥编译器，或者说设置编译器的对齐方式的。编译器的默认对齐方式是4，但是有时候我不希望对齐方式是4，而希望是别的（譬如希望1字节对齐，也可能希望是8，甚至可能希望128字节对齐）。
+1. #pragma是用来指挥编译器，或者说设置编译器的对齐方式的。编译器的默认对齐方式是4，但是有时候我不希望对齐方式是4，而希望是别的（譬如希望1字节对齐，也可能希望是8，甚至可能希望128字节对齐）。
 
-(2)常用的设置编译器编译器对齐命令有2种：第一种是#pragma pack()，这种就是设置编译器1字节对齐（有些人喜欢讲：设置编译器不对齐访问，还有些讲：取消编译器对齐访问）；第二种是#pragma pack(4)，这个括号中的数字就表示我们希望多少字节对齐。
+2. 常用的设置编译器编译器对齐命令有2种：第一种是#pragma pack()，这种就是设置编译器1字节对齐（有些人喜欢讲：设置编译器不对齐访问，还有些讲：取消编译器对齐访问）；第二种是#pragma pack(4)，这个括号中的数字就表示我们希望多少字节对齐。
 
-(3)我们需要#prgama pack(n)开头，以#pragma pack()结尾，定义一个区间，这个区间内的对齐参数就是n。
+3. 我们需要#prgama pack(n)开头，以#pragma pack()结尾，定义一个区间，这个区间内的对齐参数就是n。
 
-(4)#prgma pack的方式在很多C环境下都是支持的，但是gcc虽然也可以不过不建议使用。
+4. #prgma pack的方式在很多C环境下都是支持的，但是 gcc 虽然也可以不过不建议使用。
 
- 
-
-GCC推荐的对齐指令__attribute__((packed))  __attribute__((aligned(n)))
-
- 
+GCC 推荐的对齐指令 __attribute__((packed))  __attribute__((aligned(n)))
 
 (1)__attribute__((packed))使用时直接放在要进行内存对齐的类型定义的后面，然后它起作用的范围只有加了这个东西的这一个类型。packed的作用就是取消对齐访问。
 
 (2)__attribute__((aligned(n)))使用时直接放在要进行内存对齐的类型定义的后面，然后它起作用的范围只有加了这个东西的这一个类型。它的作用是让整个结构体变量整体进行n字节对齐（注意是结构体变量整体n字节对齐，而不是结构体内各元素也要n字节对齐）
+
+#### 测试代码一
+
+- 测试环境： `linux 64bit  `  默认应该是 8 字节对齐
+
+```c
+#include "stdio.h"
+
+struct unpacked_struct
+{
+    char c;
+    int i;
+};
+
+struct packed_struct
+{
+    char c;
+    int i;
+}__attribute__ ((__packed__));
+
+void main()
+{
+    printf("unpacked_struct size : %d \r\n", sizeof(struct unpacked_struct));
+    printf("packed_struct size : %d \r\n", sizeof(struct packed_struct));
+
+}
+```
+
+运行上述测试代码结果如下：
+
+unpacked_struct size : 8
+
+packed_struct size : 5
+
+可以看出 packed_struct 并没有进行以 `int` 长度的对齐，整个结构体只占了 5 字节内存。
+
+#### 测试代码二
+
+测试环境： `linux 64bit ` 默认应该是 8 字节对齐
+
+```c
+#include "stdio.h"
+
+struct unpacked_struct
+{
+    char c;
+    long long i;
+};
+
+struct packed_struct
+{
+    char c;
+    long long i;
+}__attribute__ ((__packed__));
+
+void main()
+{
+    printf("unpacked_struct size :%d", sizeof(struct unpacked_struct));
+    printf("packed_struct size :%d", sizeof(struct packed_struct));
+}
+```
+
+运行上述测试代码结果如下：
+
+unpacked_struct size : 16
+
+packed_struct size : 9
+
+可以看出 packed_struct 并没有进行以 `long long` 长度的对齐，整个结构体只占了 9 字节内存。
 
 ### 6.3.8 offsetof宏与container_of宏（重要）
 
@@ -1799,7 +1864,7 @@ enum weekday{sun=7,mon=1,tue,wed,thu,fri,sat}day；
                             day=(enum weekday)2； 
 这个赋值的意思是，将顺序号为 2 的枚举元素赋给 day，相当于workday=tue；
 
-# 函数和函数库
+# 7 函数和函数库
 
 
 ## 7.2 内联函数和inline关键字
