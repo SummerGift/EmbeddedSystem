@@ -2,8 +2,7 @@
 
 ## 商用 RTOS
 
-- RTA-OS
-- OSEK
+- RTA-OS / OSEK
 - QNX
 - VxWorks
 - `ucos`
