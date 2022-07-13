@@ -153,8 +153,45 @@ ARM 架构在特定点使用屏障指令来强制指定访问顺序和访问完�
 ARMv8 架构提供了三种类型的屏障指令：
 
 - 指令同步屏障（ISB）
+
+清空先前的指令流水线，例如 MMU 开启后指令和数据地址发生变化，上下文切换或者代码的位置被移动，需要执行 ISB 指令。
+
+This is used to guarantee that any subsequent instructions are fetched, again, so that privilege and access are checked with the current MMU configuration. It is used to ensure any previously executed context-changing operations, such as writes to system control registers, have completed by the time the ISB completes. In hardware terms, this might mean that the instruction pipeline is flushed, for example. Typical uses of this would be in memory management, cache control, and context switching code, or where code is being moved about in memory.
+
 - 数据内存屏障（DMB）
+
+确保在下一次内存访问操作执行前，上一个内存访问已经完成了。
+
+This prevents re-ordering of data accesses instructions across the barrier instruction. All data accesses, that is, loads or stores, but not instruction fetches, performed by this processor before the DMB, are visible to all other masters within the specified shareability domain before any of the data accesses after the DMB. For example:
+
+```assembly
+    LDR x0, [x1] // Must be seen by the memory system before the STR below.
+    DMB ISHLD
+    ADD x2, #1 // May be executed before or after the memory system sees 
+    LDR.
+    STR x3, [x4] // Must be seen by the memory system after the LDR above.
+    It also ensures that any explicit preceding data or unified cache maintenance 
+    operations have completed before any subsequent data accesses are executed.
+    DC CSW, x5 // Data clean by Set/way
+    LDR x0, [x1] // Effect of data cache clean might not be seen by this
+    // instruction
+    DMB ISH
+    LDR x2, [x3] // Effect of data cache clean will be seen by this 
+    instruction
+```
+
 - 数据同步屏障（DSB）
+
+如果上一条内存访问操作有额外的效果，需要等这些效果完全生效后再进行后续的内存访问操作。
+
+This enforces the same ordering as the Data Memory Barrier, but has the additional effect of blocking execution of any further instructions, not just loads or stores, or both, until synchronization is complete. This can be used to prevent execution of a SEV instruction, for instance, that would signal to other cores that an event occurred. It waits until all cache, TLB and branch predictor maintenance operations issued by this processor have completed for the specified shareability domain, For example:
+
+```asm
+DC ISW, x5 // operation must have completed before DSB can complete
+STR x0, [x1] // Access must have completed before DSB can complete
+DSB ISH
+ADD x2, x2, #3 // Cannot be executed until DSB completes
+```
 
 ### 内存属性
 
