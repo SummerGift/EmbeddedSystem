@@ -96,6 +96,84 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 
 ![image-20210511102234530](figures/image-20210511102234530.png)
 
+### 数据断点
+
+#### 监控变量，使用变量名 watch var
+
+var为变量的名字。
+
+如下，设置监控全局变量j，可以看到，当全局变量的由初始值0变为1的时候，被gdb监控到，并打印出这个全局变量被改变的位置。
+
+```
+(gdb) start
+Temporary breakpoint 1 at 0x40058f: file test_gdb.c, line 19.
+Starting program: /home/test_demo/gdb/test_gdb 
+Temporary breakpoint 1, main () at test_gdb.c:19
+19		int i  = 0;
+(gdb) 
+(gdb) 
+(gdb) 
+(gdb) watch j
+Hardware watchpoint 2: j
+(gdb) info breakpoints
+Num     Type           Disp Enb Address            What
+2       hw watchpoint  keep y                      j
+(gdb) continue
+Continuing.
+
+Hardware watchpoint 2: j
+
+Old value = 0
+New value = 1
+main () at test_gdb.c:24
+24			printf("-------->index %d\n", i);
+(gdb) 
+
+```
+
+#### 监控变量，使用变量地址 watch addr
+
+除了直接使用变量名之外，还可以使用变量名的地址来进行监控。
+
+在下面的例子中，我们首先获取了全局变量j的地址为0x601044，然后再使用watch命令对这个地址进行监控，但是并不是直接使用“watch 0x601044”这种方式，而是需要将地址转换为适当的数据类型。在这个例子中，全局变量j的类型为int，因此需要使用命令“watch *(int *)0x601044”，代表需要监视以地址0x601044为开始，4字节区域的值（假定int为4字节，为啥假定，不同的处理器可能定义不一样）。
+
+```
+(gdb) start
+Temporary breakpoint 1 at 0x40058f: file test_gdb.c, line 19.
+Starting program: /home/test_demo/gdb/test_gdb 
+Temporary breakpoint 1, main () at test_gdb.c:19
+19		int i  = 0;
+(gdb) 
+(gdb) 
+(gdb) 
+(gdb) watch j
+Hardware watchpoint 2: j
+(gdb) info breakpoints
+Num     Type           Disp Enb Address            What
+2       hw watchpoint  keep y                      j
+(gdb) continue
+Continuing.
+
+Hardware watchpoint 2: j
+
+Old value = 0
+New value = 1
+main () at test_gdb.c:24
+24			printf("-------->index %d\n", i);
+(gdb) 
+
+```
+
+#### 条件断点
+
+先设置数据观察点，然后对观察点设置条件表达式，参考[文档](http://c.biancheng.net/view/8255.html)，直接创建观察断点的命令为：
+
+-  `(gdb) watch expr if cond`
+
+也可以先添加数据观察点然后再次添加条件表达式，如下所示：
+
+![image-20220713095914199](figures/image-20220713095914199.png)
+
 ## 常见问题
 
 ### 加载地址与链接地址不一致
@@ -202,3 +280,6 @@ __start:
     cbz     x1, .L__cpu_0           /* .L prefix is the local label in ELF */
 ```
 
+## 可参考资料
+
+- [GDB 调试参考](https://blog.csdn.net/u011003120/article/details/109813935)
