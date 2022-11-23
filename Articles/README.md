@@ -24,6 +24,10 @@
 
 - [mind-the-end-of-your-line](https://adaptivepatchwork.com/2012/03/01/mind-the-end-of-your-line/)
 
+## Software Architecture
+
+- [Software Architecture and High Level Design](https://www.cnblogs.com/wintersun/p/14639977.html)
+
 ## Computer Science
 
 - [ABC: Always Be Coding](https://medium.com/always-be-coding/abc-always-be-coding-d5f8051afce2)
