@@ -174,6 +174,15 @@ main () at test_gdb.c:24
 
 ![image-20220713095914199](figures/image-20220713095914199.png)
 
+### 查询指定函数反汇编
+
+使用 GDB 反汇编指定的函数，注意函数不要 static 避免被优化掉就查不到了，以及要编译 debug 版本：
+
+```
+gdb-multiarch firmware.elf
+disassemble your_check_symbol
+```
+
 ## 常见问题
 
 ### 加载地址与链接地址不一致
