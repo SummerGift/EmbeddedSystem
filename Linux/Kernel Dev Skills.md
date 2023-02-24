@@ -43,3 +43,10 @@ scripts/checkpatch.pl -f drivers/folder/*.c --fix-inplace
 git format-patch -1
 scripts/checkpatch.pl 0001-kernel-xxx-init.patch
 ```
+
+或者直接使用如下命令，生成 patch 后直接将 patch 名称传递给 checkpatch 检查：
+
+```
+git format-patch --stdout -1 | scripts/checkpatch.pl --no-signoff --no-changeid -
+```
+
