@@ -154,5 +154,13 @@ ssh-add -k /Users/m/.ssh/id_rsa
 ssh-add -K privateKey 中privateKey 为/Users/m/.ssh/id_rsa
 ```
 
+## 多个 commit 合并
+
+下面是把 4 个 commit 合并成一个：
+
+```shell
+git reset --mixed HEAD~4
+```
+
 
 
