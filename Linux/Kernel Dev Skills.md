@@ -50,3 +50,11 @@ scripts/checkpatch.pl 0001-kernel-xxx-init.patch
 git format-patch --stdout -1 | scripts/checkpatch.pl --no-signoff --no-changeid -
 ```
 
+### 重定位内核 log 到 printk
+
+```
+su; echo 7777 > /proc/sys/kernel/printk
+```
+
+
+
