@@ -35,7 +35,7 @@ MEMORY
     /* 起始地址为 0x100000，这一段对应真实物理内存 BTCM，只是名字沿用了默认名称 FLASH */
     FLASH (rx) : ORIGIN = 0x100000, LENGTH = 256 * 1K
 
-    /* 起始地址为 0x200000，这一段对应真实物理内存 CTCM，只是名字沿用了默认名称 SRAM */   
+    /* 起始地址为 0x200000，这一段对应真实物理内存 XXX_REGION，只是名字沿用了默认名称 SRAM */   
     SRAM (wx) : ORIGIN = 0x200000, LENGTH = 256 * 1K
 }
 ```
@@ -44,7 +44,7 @@ MEMORY
 
 ## 输出段
 
-下面是输出段的标准格式，[>region] 指定输出段分布在内存上的地址，也就是说将该 section 分配到先前定义好的内存区域里，也就是在 MEMORY 区域定义的段，如 FLASH 、SRAM 以及 CTCM 等。
+下面是输出段的标准格式，[>region] 指定输出段分布在内存上的地址，也就是说将该 section 分配到先前定义好的内存区域里，也就是在 MEMORY 区域定义的段，如 FLASH 、SRAM 以及 XXX_REGION 等。
 
 ```C
 section [address] [(type)] : [AT(lma)]
@@ -148,6 +148,57 @@ xMEM (wx) : ORIGIN = 0x200000, LENGTH = 512 * 1K
 ```
 
 然后再将想要放置在这个段内的 section 分配到 `xMEM` 段中。
+
+### 重定位 library
+
+可以将指定 `.o` 文件或者 `lib` 文件中的不同段，text、rodata、data、bss 段分别指定到不同自定义 section 中。
+
+```c
+    . = ORIGIN(XXX_REGION);
+    _XXX_TEXT_SECTION_NAME :
+    {
+        ../app/libxxx.a(.text*)  // 重定位 lib 文件中的 text 段
+        xxx.o (.text*)           // 重定位 obj 文件中的 text 段
+
+        . = ALIGN(_region_min_align);
+        __XXX_text_end = .;
+    } > XXX_REGION
+    __XXX_text_start = ADDR(_XXX_TEXT_SECTION_NAME);
+    __XXX_text_size = SIZEOF(_XXX_TEXT_SECTION_NAME);
+
+    _XXX_RODATA_SECTION_NAME :
+    {
+        ../app/libapp.a(.rodata*)
+
+        . = ALIGN(_region_min_align);
+        __XXX_rodata_end = .;
+    }> XXX_REGION
+
+    __XXX_rodata_size = __XXX_rodata_end - __XXX_rodata_start;
+    __XXX_rodata_start = ADDR(_XXX_RODATA_SECTION_NAME);
+
+    _XXX_DATA_SECTION_NAME :
+    {
+        ../app/libapp.a(.data*)
+
+        . = ALIGN(_region_min_align);
+        __XXX_data_end = .;
+    }> XXX_REGION
+
+    __XXX_data_start = ADDR(_XXX_DATA_SECTION_NAME);
+    __XXX_data_size = SIZEOF(_XXX_DATA_SECTION_NAME);
+
+    _XXX_BSS_SECTION_NAME :
+    {
+        ../app/libapp.a(.bss*)
+
+        . = ALIGN(_region_min_align);
+        __XXX_bss_end = .;
+    } > XXX_REGION
+
+    __XXX_bss_start = ADDR(_XXX_BSS_SECTION_NAME);
+    __XXX_bss_size = SIZEOF(_XXX_BSS_SECTION_NAME);
+```
 
 ## 小结
 
