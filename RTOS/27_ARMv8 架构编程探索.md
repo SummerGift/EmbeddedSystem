@@ -11,7 +11,7 @@
 
 本篇就依据上面的关键点对 ARMv8 架构进行一番探索。
 
-## ARMv8-A 架构基础
+## 架构基础
 
 ![image-20210423144454062](figures/image-20210423144454062.png)
 
@@ -23,15 +23,83 @@
 
 可用看出，无论是 A53 还是 A57 的性能都远远超过先前的处理器性能，甚至 A57 架构还配备了专用的 GPU。
 
-## 执行状态与异常级别
+## 异常模型
 
-在 ARMv8 架构中定义了两种执行状态，AArch64 以及 AArch32。这两种执行状态分别用于描述执行使用 64 位宽的通用寄存器或者使用 32 位宽的通用寄存器。然而在 ARMv8 AArch32 中保留了 ARMv7 中定义的特权级，而在 AArch64 中，特权级通过异常等级被定义。因此执行在异常等级 `ELn` 对应于执行在特权等级 `PLn`。
+### 执行状态与异常级别
 
-在 AArch64 中，处理器模式在不同的异常等级间切换，就像指在 ARMv7（AArch32） 中当异常被处理时，处理器切换到相应的异常等级来处理异常。下图展示了两种架构在异常处理时的映射关系：
+在 ARMv8 架构中定义了两种执行状态，AArch64 以及 AArch32。这两种执行状态分别用于描述执行使用 64 位宽的通用寄存器或者使用 32 位宽的通用寄存器。在 ARMv8 AArch32 中保留了 ARMv7 中定义的特权级，而在 AArch64 中，特权级通过异常等级被定义。因此执行在异常等级 `ELn` 对应于执行在特权等级 `PLn`。
+
+在 AArch64 中，处理器模式在不同的异常等级间切换，就像指在 ARMv7（AArch32） 中当异常被处理时，处理器切换到相应的处理器模式来处理异常。下图展示了两种架构在异常处理时的映射关系：
 
 ![image-20210423151347275](figures/image-20210423151347275.png)
 
 可以看出先前在 ARMv7 时有各种异常模式，而在 ARMv8 中，这些模式统统都属于 EL1 级别，处理的时候先进入 EL1 的处理函数，然后再通过寄存器信息判断现在发生了哪种异常，然后执行对应的处理函数。
+
+### 异常分类
+
+针对 ARMv8 架构，异常主要分为两种：
+
+- **Synchronous exceptions**
+
+- **Asynchronous exceptions**
+
+同步异常类型可能有很多原因，但它们以类似的方式处理。异步异常类型被细分为三种中断类型，IRQ，FIQ 和 `SError` (System Error)。
+
+#### **Synchronous exceptions**
+
+同步异常主要是由 CPU 自身执行指令时产生的，主要有以下场景：
+
+![img](./figures/1679715500350-4.png)
+
+#### **Asynchronous exceptions**
+
+异步异常类型被细分为三种中断类型，分别是 IRQ、FIQ 和 `SError (System Error)`。IRQ 和 FIQ 是非常常见的异步异常，当发生异步的 abort 时会产生 `SError`。
+
+![img](./figures/1679715500350-5.png)
+
+### 异常触发源
+
+#### **Aborts**
+
+在 AArch64 中，异步的 abort 会造成一个 `SError` 中断异常。
+
+![img](./figures/1679715500350-8.png)
+
+#### **Reset**
+
+![img](./figures/1679715500350-1.png)
+
+#### **Exception generating instructions**
+
+![img](./figures/1679715500350-2.png)
+
+#### **Interrupts**
+
+![img](./figures/1679715500350-3.png)
+
+### 异常向量表
+
+#### aarch32
+
+当前 aarch32  系统中，主要分为 7 种异常类型，如下所示：
+
+![image-20230325114249748](./figures/image-20230325114249748.png)
+
+#### aarch64
+
+当前 [Linux aarch64](https://github.com/torvalds/linux/blob/master/arch/arm64/kernel/entry.S) 系统中，主要分为 4 种异常类型，分别为：
+
+- Synchronous
+
+- `IRQ/vIRQ`
+
+- `FIQ/vFIQ`
+
+- `SError/VSError`
+
+  
+
+![image-20230325114142890](./figures/image-20230325114142890.png)
 
 ## ARMv8 寄存器组
 
@@ -48,6 +116,8 @@ AArch64 执行状态在所有的异常级别下提供了 31 个 64 位通用寄�
 ![image-20210423152111287](figures/image-20210423152111287.png)
 
 可以看出 AArch64 与先前的寄存器组有了非常大的变化，不仅通用寄存器组的宽度和个数变多了，特殊寄存器组也非常不同。特殊寄存器组最大的变化是，先前在 ARMv7 下各种不同模式下的 BANK 寄存器组都没有了，取而代之的是不同级别异常下的 SP 指针、SPSR 以及异常返回寄存器组。
+
+------
 
 同时为了兼容先前 ARMv7 下 AArch32 执行状态，支持从 AArch64 到 AArch32 寄存器组的映射，如下图所示：
 
