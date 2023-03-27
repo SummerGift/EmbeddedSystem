@@ -1,6 +1,6 @@
 # RTOS 内核调试技巧
 
-在开发的过程中，有时没有现成的图形化开发环境，想要进行调试时，需要使用 GDB 直接进行代码调试。本文档记录了以 RT-Thread `qemu-vexpress-a9` BSP 为例，使用 GDB 对 RT-Smart 进行代码调试的方法。
+记录在嵌入式开发的过程中的调试技巧。
 
 ## 基础技巧
 
@@ -70,6 +70,15 @@ __start:
 ```shell
 aarch64-linux-gnu-readelf -S vmlinux
 ```
+
+### 利用
+
+系统在 C 语言环境下可以使用内联汇编读取系统状态。
+
+```c
+__asm__ volatile ("mrs %0, cpsr" : "=r"(cp_value) : : "memory");
+```
+
 
 ## 使用 GDB
 
