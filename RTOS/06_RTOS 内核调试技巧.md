@@ -71,7 +71,7 @@ __start:
 aarch64-linux-gnu-readelf -S vmlinux
 ```
 
-### 利用
+### 利用内联汇编
 
 系统在 C 语言环境下可以使用内联汇编读取系统状态。
 
@@ -79,6 +79,44 @@ aarch64-linux-gnu-readelf -S vmlinux
 __asm__ volatile ("mrs %0, cpsr" : "=r"(cp_value) : : "memory");
 ```
 
+### 串口打印
+
+在系统启动的调试过程中，有一个实时的输出功能非常重要，如果使用常规的 log 系统，可能会导致输出信息被缓存，不能及时打印，更有可能由于后续系统出错，而看不到任何输出。
+
+因此在系统启动时，可以先在跳转到 C 语言环境之前，先初始化串口，然后基于串口寄存器进行打印输出：
+
+```c
+#define UART_OUTPUT_REG_ADDR ((volatile char *)0x10000000)
+
+static void put_delay(uint32_t Cnt)
+{
+	uint32_t i;
+
+    for (i = 0; i < 0x1000; i++)
+    {
+        __asm__ volatile("nop");
+    }
+}
+
+void output_char(char c)
+{
+	sys_write32(c, UART_OUTPUT_REG_ADDR);
+	put_delay(1);
+}
+
+void print_string(char *string)
+{
+	char *c = string;
+
+	while (*c) {
+		output_char(*c);
+		c++;
+	}
+
+	output_char('\r');
+	output_char('\n');
+}
+```
 
 ## 使用 GDB
 
@@ -100,7 +138,7 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 
 ### 选择调试器
 
-可以选择 arm-none-eabi-gdb 或者 gdb-multiarch 作为 gdb 服务端进行调试。
+可以选择 `arm-none-eabi-gdb` 或者 `gdb-multiarch` 作为 gdb 服务端进行调试。
 
 #### 使用 `gdb-multiarch` 
 
