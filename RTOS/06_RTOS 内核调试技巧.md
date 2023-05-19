@@ -81,9 +81,7 @@ __asm__ volatile ("mrs %0, cpsr" : "=r"(cp_value) : : "memory");
 
 ### 串口打印
 
-在系统启动的调试过程中，有一个实时的输出功能非常重要，如果使用常规的 log 系统，可能会导致输出信息被缓存，不能及时打印，更有可能由于后续系统出错，而看不到任何输出。
-
-因此在系统启动时，可以先在跳转到 C 语言环境之前，先初始化串口，然后基于串口寄存器进行打印输出：
+在系统启动的调试过程中，有一个实时的输出功能非常重要，如果使用常规的 log 系统，可能会导致输出信息被缓存，不能及时打印，更有可能由于后续系统出错，而看不到任何输出。因此在系统启动时，可以先在跳转到 C 语言环境之前，先初始化串口，然后基于串口寄存器进行打印输出，可以打印字符和整形数值。
 
 ```c
 #define UART_OUTPUT_REG_ADDR ((volatile char *)0x10000000)
@@ -115,6 +113,35 @@ void print_string(char *string)
 
 	output_char('\r');
 	output_char('\n');
+}
+
+void print_int(unsigned int integer)
+{
+    char number_string_inverse[100];
+    char number_string[100];
+    int  count, cont_inverse;
+
+    count = 0;
+
+    // Force to print always at least one character
+    while ((integer > 0) || (count == 0))
+    {
+        // Add the offset for 0 to the remainder
+        number_string_inverse[count] = integer % 10 + 48; 
+        integer   = integer / 10;
+        count++;
+    }
+
+    number_string[count] = 0;
+    cont_inverse = 0;
+    while (count>0)
+    {
+        count--;
+        number_string[count] = number_string_inverse[cont_inverse];
+        cont_inverse++;
+    }
+
+    print_string(number_string);
 }
 ```
 
