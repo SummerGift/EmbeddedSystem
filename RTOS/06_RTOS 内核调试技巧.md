@@ -73,6 +73,8 @@ aarch64-linux-gnu-readelf -S vmlinux
 
 ### 利用内联汇编
 
+可以参考详细 [ Arm 内联汇编语法](http://www.ethernut.de/en/documents/arm-inline-asm.html)。
+
 系统在 C 语言环境下可以使用内联汇编读取系统状态。
 
 ```c
