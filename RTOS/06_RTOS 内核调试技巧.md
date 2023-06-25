@@ -88,6 +88,33 @@ __asm__ volatile ("mrs %0, cpsr" : "=r"(cp_value) : : "memory");
 ```c
 #define UART_OUTPUT_REG_ADDR ((volatile char *)0x10000000)
 
+#define nop()   __asm__ volatile("" ::: "memory")
+#define dsb()   __asm__ volatile("dsb sy" ::: "memory")
+#define dmb()   __asm__ volatile("dmb sy" ::: "memory")
+#define isb()   __asm__ volatile("isb" ::: "memory")
+
+unsigned int sys_read32(unsigned int addr)
+{
+    unsigned int val = *(volatile unsigned int *)addr;
+
+    dmb();
+    return val;
+}
+
+void sys_write32(unsigned int data, unsigned int addr)
+{
+    dmb();
+    *(volatile unsigned int *)addr = data;
+}
+
+void nop_delay(unsigned int count)
+{
+    int i;
+    for (i = 0; i < count; i++) {
+        __asm__ volatile("nop");
+    }
+}
+
 static void put_delay(uint32_t Cnt)
 {
 	uint32_t i;
@@ -146,6 +173,48 @@ void print_int(unsigned int integer)
     print_string(number_string);
 }
 ```
+
+### 内存访问
+
+使用下面的代码片段可以访问内存空间，同时支持读改写逻辑：
+
+```c
+#include <stdint.h>
+
+/* low level macros for accessing memory mapped hardware registers */
+#define REG64(addr) ((volatile uint64_t *)(uintptr_t)(addr))
+#define REG32(addr) ((volatile uint32_t *)(uintptr_t)(addr))
+#define REG16(addr) ((volatile uint16_t *)(uintptr_t)(addr))
+#define REG8(addr) ((volatile uint8_t *)(uintptr_t)(addr))
+
+#define RMWREG64(addr, startbit, width, val) *REG64(addr) = (*REG64(addr) & ~(((1<<(width)) - 1) << (startbit))) | ((val) << (startbit))
+#define RMWREG32(addr, startbit, width, val) *REG32(addr) = (*REG32(addr) & ~(((1<<(width)) - 1) << (startbit))) | ((val) << (startbit))
+#define RMWREG16(addr, startbit, width, val) *REG16(addr) = (*REG16(addr) & ~(((1<<(width)) - 1) << (startbit))) | ((val) << (startbit))
+#define RMWREG8(addr, startbit, width, val) *REG8(addr) = (*REG8(addr) & ~(((1<<(width)) - 1) << (startbit))) | ((val) << (startbit))
+
+#define writeq(v, a) (*REG64(a) = (v))
+#define readq(a) (*REG64(a))
+#define writel(v, a) (*REG32(a) = (v))
+#define readl(a) (*REG32(a))
+#define writeb(v, a) (*REG8(a) = (v))
+#define readb(a) (*REG8(a))
+```
+
+### 寄存器读改写
+
+This code defines a macro called RMWREG32 that can be used to read-modify-write a 32-bit register at a given address.
+
+Here's an example of how you can use this macro:
+
+Suppose you have a 32-bit register located at address 0x1000, and you want to set bits 5-8 to the value 0x7. You can use the RMWREG32 macro as follows:
+
+```
+RMWREG32(0x1000, 5, 4, 0x7);
+```
+
+This will read the 32-bit value at address 0x1000, clear bits 5-8, set bits 5-8 to the value 0x7, and write the modified value back to address 0x1000.
+
+Note that the second argument (startbit) specifies the starting bit position of the field you want to modify, and the third argument (width) specifies the width of the field in bits. The fourth argument (val) is the value you want to write to the field.
 
 ## 使用 GDB
 
