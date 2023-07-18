@@ -236,11 +236,11 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 
 ### 选择调试器
 
-可以选择 `arm-none-eabi-gdb` 或者 `gdb-multiarch` 作为 gdb 服务端进行调试。
+可以选择 `arm-none-eabi-gdb` 或者 `gdb-multiarch` 作为 `gdb` 服务端进行调试。
 
 #### 使用 `gdb-multiarch` 
 
-- 安装 `gdb-multiarch` 作为 gdb 服务端 
+- 安装 `gdb-multiarch` 作为 `gdb` 服务端 
 - `gdb-multiarch rtthread.elf -ex "tar ext localhost:1234"` 连接到 QEMU 进行代码调试
 
 #### 使用 `arm-none-eabi-gdb`
@@ -249,7 +249,7 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 
 #### 图形化界面
 
-如果想要以 GUI 模式启动 gdb，可以在命令行中添加参数 `-tui`，如下面的命令：
+如果想要以 GUI 模式启动 `gdb`，可以在命令行中添加参数 `-tui`，如下面的命令：
 
 - `gdb-multiarch rtthread.elf -ex "tar ext localhost:1234" -tui`
 
@@ -388,13 +388,33 @@ main () at test_gdb.c:24
 
 ![image-20220713095914199](figures/image-20220713095914199.png)
 
+### 通过函数查看地址
+
+info address function_name，示例如下：
+
+```
+(gdb) info address test
+Symbol "test" is a function at address 0x9e250
+```
+
+### 通过地址查看函数名
+
+info symbol func_addr，示例如下：
+
+```
+(gdb) info symbol 0x9e250
+test in section .text
+```
+
 ### 查询函数反汇编
 
-使用 GDB 反汇编指定的函数，注意函数不要 static 避免被优化掉就查不到了，以及要编译 debug 版本：
+使用 GDB 反汇编指定的函数，注意函数不要 static 避免被优化掉就查不到了，以及要编译 debug 版本。
+
+先查看 map 文件或者通过地址查询，找到指定地址对应的函数，然后再通过 `gdb` 查看 elf 文件获取函数的反汇编信息：
 
 ```
 gdb-multiarch firmware.elf
-disassemble your_check_symbol
+disassemble symbol
 ```
 
 ### 加载与链接地址不同
