@@ -216,6 +216,14 @@ This will read the 32-bit value at address 0x1000, clear bits 5-8, set bits 5-8 
 
 Note that the second argument (startbit) specifies the starting bit position of the field you want to modify, and the third argument (width) specifies the width of the field in bits. The fourth argument (val) is the value you want to write to the field.
 
+### addr2line
+
+根据程序地址找到代码所在行：
+
+```
+addr2line -e xxx.elf 0x133bc -f -a -p -C
+```
+
 ## 使用 GDB
 
 ### 开发配置
@@ -468,7 +476,11 @@ DS-5 重新加载符号表命令如下：
 
 `add-symbol-file filename [ textaddress ] [-s section address ... ]`
 
-其中 textaddress 指的是文件镜像将要加载的地址。因此，DS-5 和 GDB 中的参数有区别。
+其中 `textaddress` 指的是文件镜像将要加载的地址。因此，DS-5 和 GDB 中的参数有区别。
+
+## 使用 Trace32
+
+### 查看调用栈
 
 ## 参考资料
 
