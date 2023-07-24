@@ -224,6 +224,15 @@ Note that the second argument (startbit) specifies the starting bit position of 
 addr2line -e xxx.elf 0x133bc -f -a -p -C
 ```
 
+### 查看 MD5
+
+有时需要查看文件是否一致，一个更稳妥的方法是查看文件的 MD5 值，例如：
+
+```
+md5sum xx.elf 
+52294aacc76a732e7a4ed304b24985f0  xx.elf
+```
+
 ## 使用 GDB
 
 ### 开发配置
