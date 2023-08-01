@@ -51,6 +51,24 @@
 - 非常好用的本地 MarkDown 编辑器：[Typora](https://www.typora.io/)，支持 md 格式向各种格式的轻松转换
 - 云端 MarkDown 编辑器：[Cmd MarkDown](https://www.zybuluo.com/mdeditor)，云端保存和搜索功能十分强大
 
+### VScode
+
+使用 bear 工具记录工程编译命令，然后添加到 vscode 的  Compile Commands 配置中，可以帮助编辑器优先跳转到预先指定路径的代码，无需手动添加头文件路径。
+
+```
+apt install bear
+```
+
+在 make 命令前添加：
+
+```
+bear make xxx
+```
+
+会在编译目录生成 `compile_commands.json` 文件，添加如下配置，编辑器就可以根据编译配置来跳转了。
+
+![image-20230801154130122](figures/image-20230801154130122.png)
+
 ## 代码统计工具
 
 - 代码统计工具，支持多平台使用、多语言识别，能够计算指定目标文件或文件夹中的文件数（files）、空白行数（blank）、注释行数（comment）和代码行数（code）：[cloc](https://github.com/AlDanial/cloc)
