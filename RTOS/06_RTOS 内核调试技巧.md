@@ -218,10 +218,16 @@ Note that the second argument (startbit) specifies the starting bit position of 
 
 ### addr2line
 
-根据程序地址找到代码所在行：
+根据程序地址找到代码所在行，有些情况下需要使用对应工具链的 addr2line 来检查才可以，否则可能无法找到对应的代码行。
 
 ```
 addr2line -e xxx.elf 0x133bc -f -a -p -C
+```
+
+上面的命令如果无法工作，则需要使用下列命令：
+
+```
+/gcc/gcc-arm-11.2-2022.02-x86_64-aarch64-none-elf/bin/aarch64-none-elf-addr2line -e xxxx.elf -f -a -p -C 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx
 ```
 
 ### 查看 MD5
