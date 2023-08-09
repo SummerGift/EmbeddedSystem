@@ -65,9 +65,9 @@ apt install bear
 bear make xxx
 ```
 
-会在编译目录生成 `compile_commands.json` 文件，添加如下配置，编辑器就可以根据编译配置来跳转了。
+会在编译目录生成 `compile_commands.json` 文件，拷贝到根目录，在工作区添加该配置，只在工作区生效，编辑器就可以根据编译配置来跳转了。
 
-![image-20230801154130122](figures/image-20230801154130122.png)
+![image-20230809104222731](figures/image-20230809104222731.png)
 
 ## 代码统计工具
 
