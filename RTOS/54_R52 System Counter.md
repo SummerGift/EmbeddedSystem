@@ -44,3 +44,6 @@ static inline __attribute__((always_inline)) void write_cntvct(uint64_t val)
 }
 ```
 
+## 注意事项
+
+在 RTOS 子系统复位后，由于 System Counter 是由外部提供，因此如果继续读取 arch timer 的 CNTV 作为时间基准，会发现时间基准不是从 0 开始，而是接续复位前的时间。
