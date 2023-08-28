@@ -61,7 +61,10 @@ __start:
 
 ### 栈溢出
 
-栈内存被写穿的情况，由于线程栈太小，导致在函数较深调用时，导致栈溢出，破坏了系统中其他的数据结构。如果在调试的时候发现，某个变量在没有主动修改的时候突然发生改变，可以怀疑是否出现了栈溢出。
+栈内存被写穿的情况，由于线程栈太小，导致在函数较深调用时，导致栈溢出，破坏了系统中其他的数据结构。如果在调试的时候发现如下现象，可以怀疑是否出现了栈溢出。
+
+- 某个变量在没有主动修改的时候突然发生改变
+- 系统经常崩溃，但是出错的情况很随机，莫名奇妙出现各种故障，例如 data abort 或者 prefetch abort 等
 
 ### 读取符号表
 
@@ -495,35 +498,50 @@ DS-5 重新加载符号表命令如下：
 
 ## Trace32 基础命令
 
-| 分类                                            | 说明                                                         |
-| ----------------------------------------------- | ------------------------------------------------------------ |
-| ```data.load xxx.elf /nocode```                 | 仅加载 elf 中的 symbol，不加载代码，加载速度较快，需要先加载 bin 文件到内存中。 |
-| `data.load xxx.elf`                             | 常规加载方式，加载符号表和代码                               |
-| `Data.LOAD.Binary xx.bin 0x00100000`            | 加载 bin 文件到指定地址                                      |
-| `go (g)`                                        | 启动仿真                                                     |
-| `Break (b)`                                     | 设置断点                                                     |
-| `step`                                          | 单步调试                                                     |
-| `d.dump 0x12000000 /spotlight `                 | 用 CPU 的视角去访问 memory，当数据有变化时，高亮显示如果开启了 MMU，那么 0x12000000 就是 VA(virtual address)  如果 disable MMU，则 0x12000000 是 PA(physical address) 如果 enable cache，则访问cache/memory 中的有效数据 |
-| `d.dump anc:0x12000000`                         | CPU 视角，但是 bypass MMU+CACHE，等同于0x12000000 是物理地址，常用于 kernel 下访问 physical memory |
-| `d.dump azs:0x12000000`                         | Secure  + physical 方式访问 0x12000000，常用于 kernel 下访问 secure device/memory |
-| `d.dump eaxi:0x12000000`                        | 不 halt CPU 情况下，通过 `coresight axiap` 访问0x12000000 (PA) |
-| `v.v handler gicd_lock`                         | 查看 handler 和 `gicd_lock` 这两个 symbol 的值（需加载elf)   |
-| `(struct ihandler *)0x12040000`                 | 查看存储在 0x12040000 地址的 `ihandler` 结构体               |
-| `b.set function`                                | 通过 symbol (function) 设置断点 （需要预先加载elf）          |
-| `b.set 0x12000000++100 /rw`                     | 设置读、写断点，当 CPU 读/写 0x12000000 时，触发 breakpoint，trace32 将 halt CPU |
-| `per`                                           | 查看 CPU 相关 system register，比较常用的是 `ELR_ELx/FAR_ELx/ESR_ELx/TTBR_ELx` |
-| `mmu.info 0x12000000`                           | 查看 0x12000000(VA) 对应的 MMU 信息（trace32 将根据 TTBR 来进行 page table walk） |
-| `mmu.dump pagetable 0x1800000000`               | 对虚拟地址 0x1800000000 进行 Walk page table                 |
-| `r`                                             | 查看 `cpu register (arm64:x0-x30, pc / arm: r0-r15, lr)`     |
-| `r.set pc 0x12000000`                           | 将 pc 设置到 0x12000000                                      |
-| `b.set sync_exc_current_el_SP0`                 | 当 CPU 发生 sync exception (比如 data abort）时，halt CPU，常用于分析 `mmu/serror ` 等异常 |
-| `b.set fiq_current_el_SP0`                      | 将断点设置在 FIQ 入口 （APU 处于 secure)                     |
-| `b.set irq_current_el_SP0`                      | 将断点设置在 IRQ 入口 （APU 处于 none secure)                |
-| `list.asm`                                      | 仅显示 assemble code                                         |
-| `list.mix`                                      | 显示 symbol + assemble code                                  |
-| `frame /locals`                                 | 显示 stack 调用栈                                            |
-| `cache.dump dc`                                 | `Dump dcahe`                                                 |
-| `data.save.binary dmesg.log __log_buf++0x20000` | 常用于dump kernel `dmesg`，通过获取 dmesg.log 分析 kernel panic 原因 |
+### 调试控制
+
+| `go (g)`                        | 启动仿真                                                     |
+| ------------------------------- | ------------------------------------------------------------ |
+| `Break (b)`                     | 设置断点                                                     |
+| `step`                          | 单步调试                                                     |
+| `b.set function`                | 通过 symbol (function) 设置断点 （需要预先加载elf）          |
+| `b.set 0x12000000++100 /rw`     | 设置读、写断点，当 CPU 读/写 0x12000000 时，触发 breakpoint，trace32 将 halt CPU |
+| `r.set pc 0x12000000`           | 将 pc 设置到 0x12000000                                      |
+| `b.set sync_exc_current_el_SP0` | 当 CPU 发生 sync exception (比如 data abort）时，halt CPU，常用于分析 `mmu/serror ` 等异常 |
+| `b.set fiq_current_el_SP0`      | 将断点设置在 FIQ 入口 （APU 处于 secure)                     |
+| `b.set irq_current_el_SP0`      | 将断点设置在 IRQ 入口 （APU 处于 none secure)                |
+| `list.asm`                      | 仅显示 assemble code                                         |
+| `list.mix`                      | 显示 symbol + assemble code                                  |
+| `r`                             | 查看 `cpu register (arm64:x0-x30, pc / arm: r0-r15, lr)`     |
+| `frame /locals`                 | 显示 stack 调用栈                                            |
+
+### 数据加载
+
+| 分类                                 | 说明                                                         |
+| ------------------------------------ | ------------------------------------------------------------ |
+| ```data.load xxx.elf /nocode```      | 仅加载 elf 中的 symbol，不加载代码，加载速度较快，需要先加载 bin 文件到内存中。常用于调试场景，便于查看调用栈 |
+| `data.load xxx.elf`                  | 常规加载方式，加载符号表和代码                               |
+| `Data.LOAD.Binary xx.bin 0x00100000` | 加载 bin 文件到指定地址                                      |
+
+### 数据查看
+
+| 命令                                             | 说明                                                         |
+| --------------------- | ------------------------------------------------------------ |
+| `Data.Print %Hex.long.LE 0x80000000--0x80000010` | 以 16 进制打印一段内存，以当前 master 的普通视角，主要用于查看一小段内存，以避免有部分内存无法访问，需要注意这种访问方式有可能被 MPU 阻止 |
+| `d.dump anc:0x12000000`                          | CPU 视角，但是 bypass MMU+CACHE，等同于0x12000000 是物理地址，常用于 kernel 下访问 physical memory |
+| `d.dump azs:0x12000000`                          | Secure  + physical 方式访问 0x12000000，常用于 kernel 下访问 secure device/memory |
+| `d.dump eaxi:0x12000000`                         | 不 halt CPU 情况下，通过 `coresight axiap` 访问0x12000000 (PA) |
+| `per` | 查看 CPU 相关 system register，比较常用的是 `ELR_ELx/FAR_ELx/ESR_ELx/TTBR_ELx` |
+| `mmu.info 0x12000000` | 查看 0x12000000(VA) 对应的 MMU 信息（trace32 将根据 TTBR 来进行 page table walk） |
+| `d.dump 0x12000000 /spotlight ` | 用 CPU 的视角去访问 memory，当数据有变化时，高亮显示如果开启了 MMU，那么 0x12000000 就是 VA(virtual address)  如果 disable MMU，则 0x12000000 是 PA(physical address) 如果 enable cache，则访问cache/memory 中的有效数据 |
+| `v.v handler gicd_lock`         | 查看 handler 和 `gicd_lock` 这两个 symbol 的值（需加载elf)   |
+| `(struct ihandler *)0x12040000` | 查看存储在 0x12040000 地址的 `ihandler` 结构体               |
+| `list.asm`                                       | 仅显示 assemble code                                         |
+| `list.mix`                                       | 显示 symbol + assemble code                                  |
+| `frame /locals`                                  | 显示 stack 调用栈                                            |
+| `cache.dump dc`                                  | `Dump dcahe`                                                 |
+| `data.save.binary dmesg.log __log_buf++0x20000`  | 常用于dump kernel `dmesg`，通过获取 dmesg.log 分析 kernel panic 原因，0x20000 是想要 dump 的数据长度，如果长度太短，可能会没能获取有效信息 |
+| `mmu.dump pagetable 0x1800000000` | 对虚拟地址 0x1800000000 进行 Walk page table             |
 
 ## 参考资料
 
