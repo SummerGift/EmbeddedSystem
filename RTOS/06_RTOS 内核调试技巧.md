@@ -4,12 +4,18 @@
 
 ## 基础技巧
 
-### 反汇编
+### 代码反汇编
 
 在代码调试以及查找错误时，有时会需要对 elf 进行反汇编做代码查看和对比的情况，此时需要使用工具链进行反汇编，命令如下：
 
 ```shell
 arm-linux-musleabi-objdump -S rtthread.elf > rtthread.S
+```
+
+### DTB 反汇编
+
+```
+dtc -I dtb -O dts dtb.img -o xxx.dts
 ```
 
 ### 预处理
