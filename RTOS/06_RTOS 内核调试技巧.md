@@ -332,15 +332,15 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 
 因为 RT-Smart 内核的加载地址与链接地址不一致，所以开始调试时，只能将调试断点打在 MMU 使能之后。
 
-![image-20210511101849251](figures/image-20210511101849251.png)
+<img src="figures/image-20210511101849251.png" alt="image-20210511101849251" style="zoom:50%;" />
 
 打开图形化界面后，使用 si 指令进行单步调试：
 
-![image-20210511102025773](figures/image-20210511102025773.png)
+<img src="figures/image-20210511102025773.png" alt="image-20210511102025773" style="zoom:50%;" />
 
 如果想观察寄存器中数值的变化，可以切换到通用寄存器视角：
 
-![image-20210511102234530](figures/image-20210511102234530.png)
+<img src="figures/image-20210511102234530.png" alt="image-20210511102234530" style="zoom:50%;" />
 
 ### 数据断点
 
@@ -463,7 +463,7 @@ b *((char *)_reset + 0xa0000000)
 
 以上命令即可将断点打在相应的物理地址上，此时打开 GDB 的代码调试窗口，还不能看到对应汇编源码，但是在浏览窗口可以看到反汇编代码，使用 si ni 指令查看汇编代码调试。
 
-![image-20210508172544752](figures/image-20210508172544752.png)
+<img src="figures/image-20210508172544752.png" alt="image-20210508172544752" style="zoom:50%;" />
 
 这里 `0xa0000000` 就是 PV_OFFSET。如果是想从物理地址获得虚拟地址，需要 P - (P-V) = V，如果是先要从虚拟地址获得物理地址，则需要 V + (P - V) = P。
 
@@ -482,23 +482,16 @@ aarch64-linux-gnu-readelf -S vmlinux
 
 此时可以使用 `readelf` 命令查看可执行文件中符号的链接位置：
 
-![image](figures/125370274-acee9c00-e3b0-11eb-9f56-12a09b4e8195.png)
+<img src="figures/125370274-acee9c00-e3b0-11eb-9f56-12a09b4e8195.png" alt="image" style="zoom: 33%;" />
 
-如果发现加载地址与链接地址不符，可以算出 PV_OFFSET，然后使用 add-symbil-file 命令将符号加载到代码实际运行的地址上，例如：
+如果发现加载地址与链接地址不符，可以算出 PV_OFFSET，然后使用 `add-symbil-file` 命令将符号加载到代码实际运行的地址上，例如：
 
-计算偏移量的方式如下：
-`0x80080000− 0xffff000010080000 = −0xfffeffff90000000`
-
-DS-5 重新加载符号表命令如下：
-`add-symbol-file /home/vmlinux -0xfffeffff90000000`
-
-在 DS-5 中 add-symbol-file 命令的格式如下：
-
-`add-symbol-file filename [offset] [-s section address]...`
-
-而 GDB 中的 add-symbol-file 命令如下：
-
-`add-symbol-file filename [ textaddress ] [-s section address ... ]`
+| 功能                             | 命令                                                         |
+| -------------------------------- | ------------------------------------------------------------ |
+| 计算偏移量                       | `0x80080000− 0xffff000010080000 = −0xfffeffff90000000`       |
+| DS-5 重新加载符号表              | `add-symbol-file /home/vmlinux -0xfffeffff90000000`          |
+| 在 DS-5 中 add-symbol-file 命令  | `add-symbol-file filename [offset] [-s section address]...`  |
+| 而 GDB 中的 add-symbol-file 命令 | `add-symbol-file filename [ textaddress ] [-s section address ... ]` |
 
 其中 `textaddress` 指的是文件镜像将要加载的地址。因此，DS-5 和 GDB 中的参数有区别。
 
@@ -518,7 +511,6 @@ DS-5 重新加载符号表命令如下：
 | `b.set irq_current_el_SP0`      | 将断点设置在 IRQ 入口 （APU 处于 none secure)                |
 | `list.asm`                      | 仅显示 assemble code                                         |
 | `list.mix`                      | 显示 symbol + assemble code                                  |
-| `r`                             | 查看 `cpu register (arm64:x0-x30, pc / arm: r0-r15, lr)`     |
 | `frame /locals`                 | 显示 stack 调用栈                                            |
 
 ### 数据加载
@@ -532,22 +524,26 @@ DS-5 重新加载符号表命令如下：
 ### 数据查看
 
 | 命令                                             | 说明                                                         |
-| --------------------- | ------------------------------------------------------------ |
-| `Data.Print %Hex.long.LE 0x80000000--0x80000010` | 以 16 进制打印一段内存，以当前 master 的普通视角，主要用于查看一小段内存，以避免有部分内存无法访问，需要注意这种访问方式有可能被 MPU 阻止 |
+| ------------------------------------------------ | ------------------------------------------------------------ |
+| `Data.Print %Hex.long.LE 0x80000000--0x80000010` | 以 16 进制打印一段内存，以当前 master 的普通视角，主要用于查看一小段内存，以避免有部分内存无法访问，需要注意这种访问方式有可能被 MPU 阻止。如果被阻止无法查看，可以考虑使用其他视角来访问。 |
 | `d.dump anc:0x12000000`                          | CPU 视角，但是 bypass MMU+CACHE，等同于0x12000000 是物理地址，常用于 kernel 下访问 physical memory |
 | `d.dump azs:0x12000000`                          | Secure  + physical 方式访问 0x12000000，常用于 kernel 下访问 secure device/memory |
 | `d.dump eaxi:0x12000000`                         | 不 halt CPU 情况下，通过 `coresight axiap` 访问0x12000000 (PA) |
-| `per` | 查看 CPU 相关 system register，比较常用的是 `ELR_ELx/FAR_ELx/ESR_ELx/TTBR_ELx` |
-| `mmu.info 0x12000000` | 查看 0x12000000(VA) 对应的 MMU 信息（trace32 将根据 TTBR 来进行 page table walk） |
-| `d.dump 0x12000000 /spotlight ` | 用 CPU 的视角去访问 memory，当数据有变化时，高亮显示如果开启了 MMU，那么 0x12000000 就是 VA(virtual address)  如果 disable MMU，则 0x12000000 是 PA(physical address) 如果 enable cache，则访问cache/memory 中的有效数据 |
-| `v.v handler gicd_lock`         | 查看 handler 和 `gicd_lock` 这两个 symbol 的值（需加载elf)   |
-| `(struct ihandler *)0x12040000` | 查看存储在 0x12040000 地址的 `ihandler` 结构体               |
+| `per`                                            | 查看 CPU 相关 system register，比较常用的是 `ELR_ELx/FAR_ELx/ESR_ELx/TTBR_ELx` |
+| `r`                                              | 查看 `cpu register (arm64:x0-x30, pc / arm: r0-r15, lr)`     |
+| `mmu.info 0x12000000`                            | 查看 0x12000000(VA) 对应的 MMU 信息（trace32 将根据 TTBR 来进行 page table walk） |
+| `d.dump 0x12000000 /spotlight `                  | 用 CPU 的视角去访问 memory，当数据有变化时，高亮显示如果开启了 MMU，那么 0x12000000 就是 VA(virtual address)  如果 disable MMU，则 0x12000000 是 PA(physical address) 如果 enable cache，则访问cache/memory 中的有效数据 |
+| `v.v handler gicd_lock`                          | 查看 handler 和 `gicd_lock` 这两个 symbol 的值（需加载elf)   |
+| `(struct ihandler *)0x12040000`                  | 查看存储在 0x12040000 地址的 `ihandler` 结构体               |
 | `list.asm`                                       | 仅显示 assemble code                                         |
 | `list.mix`                                       | 显示 symbol + assemble code                                  |
 | `frame /locals`                                  | 显示 stack 调用栈                                            |
 | `cache.dump dc`                                  | `Dump dcahe`                                                 |
-| `data.save.binary dmesg.log __log_buf++0x20000`  | 常用于dump kernel `dmesg`，通过获取 dmesg.log 分析 kernel panic 原因，0x20000 是想要 dump 的数据长度，如果长度太短，可能会没能获取有效信息 |
-| `mmu.dump pagetable 0x1800000000` | 对虚拟地址 0x1800000000 进行 Walk page table             |
+| `Data.SAVE.Binary`                               | 示例 1 用于dump kernel `dmesg`，通过获取 dmesg.log 分析 kernel panic 原因，0x20000 是想要 dump 的数据长度，如果长度太短，可能会没能获取有效信息。 |
+|                                                  | `data.save.binary dmesg.log __log_buf++0x20000`              |
+|                                                  | 示例 2 通过 `eaxi` 视角 dump DDR 中的数据到 bin 文件， 使用 `eaxi` 视角的原因是有时候 mater 没有访问特定 DDR 的权限。 |
+|                                                  | `data.save.binary data_dump.bin eaxi:0x80000000--0x80001000` |
+| `mmu.dump pagetable 0x1800000000`                | 对虚拟地址 0x1800000000 进行 Walk page table                 |
 
 ## 参考资料
 
