@@ -262,8 +262,8 @@ EL1_Reset_Handler:
     msr CPSR_c, #(MODE_FIQ | I_BIT | F_BIT)
     ldr sp, =(z_arm_fiq_stack + CONFIG_ARMV7_FIQ_STACK_SIZE)
 
-    /* IRQ mode stack */
-    msr CPSR_c, #(MODE_IRQ | I_BIT | F_BIT)
+    /* IRQ mode stack */                              # 切换到 IRQ 模式，并屏蔽掉 IRQ 和 FIQ
+    msr CPSR_c, #(MODE_IRQ | I_BIT | F_BIT)                   
     ldr sp, =(z_interrupt_stacks + CONFIG_ISR_STACK_SIZE)
 
     /* ABT mode stack */
