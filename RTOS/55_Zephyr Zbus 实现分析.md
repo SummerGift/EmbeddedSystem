@@ -8,7 +8,9 @@ The *Zephyr bus - zbus* is a lightweight and flexible software bus enabling a si
 
 通过 `zbus` 的通信是基于通道的，线程或者 cb 通过通道来交换消息。另外，线程还可以发布和观察通道。当一个线程在一个通道上发布一个消息，这个消息可以被所有在该发布通道的观察者获取。基于观察者的类型，观察者可以直接获取消息、获取消息的拷贝或者只收到发布通道的引用。
 
-The figure below shows an example of a typical application using zbus in which the application logic (hardware independent) talks to other threads via software bus. Note that the threads are decoupled from each other because they only use zbus channels and do not need to know each other to talk.
+The figure below shows an example of a typical application using zbus in which the application logic (hardware independent) talks to other threads via software bus. **Note that the threads are decoupled from each other because they only use zbus channels and do not need to know each other to talk.**
+
+使用 Zbus 进行通信时，线程间是解耦的，因为他们只使用 zbus 通道，而不需要知道通信的其他线程。
 
 ![image-20231031153311614](figures/image-20231031153311614.png)
 
