@@ -18,6 +18,12 @@ arm-linux-musleabi-objdump -S rtthread.elf > rtthread.S
 dtc -I dtb -O dts dtb.img -o xxx.dts
 ```
 
+### kernel module 反汇编
+
+```
+aarch64-none-elf-objdump -D xxx_module.ko > xxx_module.S
+```
+
 ### 预处理
 
 GCC 的“-E”选项可以让编译器在预处理阶段就结束，选项“-o”可以指定输出的文件格式。通过编译器的预处理，可以查看真实参与编译代码的实际情况，便于理解代码。另外在软件测试领域，很多情况下要对原始代码插装，查看预处理后的代码可以有助于理解代码的实际行为。
