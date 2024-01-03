@@ -444,6 +444,13 @@ info symbol func_addr，示例如下：
 test in section .text
 ```
 
+通过 l* 命令通过地址查看函数：
+
+```
+gdb-multiarch vmlinux
+(gdb) 1* 0xffffffc0103c5e34
+```
+
 ### 查询函数反汇编
 
 使用 GDB 反汇编指定的函数，注意函数不要 static 避免被优化掉就查不到了，以及要编译 debug 版本。
