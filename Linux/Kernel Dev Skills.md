@@ -56,5 +56,10 @@ git format-patch --stdout -1 | scripts/checkpatch.pl --no-signoff --no-changeid 
 su; echo 7777 > /proc/sys/kernel/printk
 ```
 
+## 存储 deconfig 文件
 
+- make xxx_linux_virt_defconfig 选择一个预设的
+- make menuconfig 进行配置
+- make savedefconfig
+- cp defconfig 存储到指定目录
 
