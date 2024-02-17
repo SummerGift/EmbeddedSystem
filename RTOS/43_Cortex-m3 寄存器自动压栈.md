@@ -1,6 +1,13 @@
-在 CM3 架构上发生中断时，硬件会自动压栈部分寄存器 R0-R3，R12（The Intra-Procedure-call scratch register）、R14（The Link Register）、R15（The Program Counter），那么其他的寄存器是否需要保存，答案是肯定的。
+# CM3 寄存器自动压栈
 
-引用 《Procedure Call Standard for the Arm Architecture》 中的原话如下:
+在 CM3 架构上发生中断时，硬件会自动压栈部分寄存器：
+
+- R0-R3
+- R12（The Intra-Procedure-call scratch register）、
+- R14（The Link Register）
+- R15（The Program Counter），
+
+那么其他的寄存器是否需要保存，答案是肯定的。引用 《Procedure Call Standard for the Arm Architecture》 中的原话如下:
 
 A subroutine must preserve the contents of the registers r4-r8, r10, r11 and SP (and r9 in PCS variants that designate r9 as v6)
 
