@@ -558,6 +558,18 @@ aarch64-linux-gnu-readelf -S vmlinux
 |                                                  | `data.save.binary data_dump.bin eaxi:0x80000000--0x80001000` |
 | `mmu.dump pagetable 0x1800000000`                | 对虚拟地址 0x1800000000 进行 Walk page table                 |
 
+## 问题解决思路
+
+1. 充分理解问题
+
+2. 尝试复现问题
+
+3. 识别根本原因
+
+4. 修复该问题
+
+5. 检查是否修复成功，失败则返回第一步
+
 ## 参考资料
 
 - [GDB 调试参考](https://blog.csdn.net/u011003120/article/details/109813935)
