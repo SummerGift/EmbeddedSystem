@@ -100,3 +100,53 @@ if (!vaddr) {
 }
 ```
 
+### 指针类型打印
+
+在 `linux` 系统中直接使用 %p 打印指针会打印被 hash 的指针，无法打印出指针的真实值，原因是为了避免泄露系统的信息。
+
+可参考文档：https://www.kernel.org/doc/Documentation/core-api/printk-formats.rst
+
+```yaml
+Pointer types
+=============
+
+A raw pointer value may be printed with %p which will hash the address
+before printing. The kernel also supports extended specifiers for printing
+pointers of different types.
+
+Some of the extended specifiers print the data on the given address instead
+of printing the address itself. In this case, the following error messages
+might be printed instead of the unreachable information::
+
+	(null)	 data on plain NULL address
+	(efault) data on invalid address
+	(einval) invalid data on a valid address
+
+Plain Pointers
+--------------
+
+::
+
+	%p	abcdef12 or 00000000abcdef12
+
+Pointers printed without a specifier extension (i.e unadorned %p) are
+hashed to prevent leaking information about the kernel memory layout. This
+has the added benefit of providing a unique identifier. On 64-bit machines
+the first 32 bits are zeroed. The kernel will print ``(ptrval)`` until it
+gathers enough entropy.
+
+When possible, use specialised modifiers such as %pS or %pB (described below)
+to avoid the need of providing an unhashed address that has to be interpreted
+post-hoc. If not possible, and the aim of printing the address is to provide
+more information for debugging, use %p and boot the kernel with the
+``no_hash_pointers`` parameter during debugging, which will print all %p
+addresses unmodified. If you *really* always want the unmodified address, see
+%px below.
+
+If (and only if) you are printing addresses as a content of a virtual file in
+e.g. procfs or sysfs (using e.g. seq_printf(), not printk()) read by a
+userspace process, use the %pK modifier described below instead of %p or %px.
+```
+
+
+
