@@ -53,6 +53,8 @@
 
 ### VScode
 
+#### 通过 bear 支持跳转
+
 使用 bear 工具记录工程编译命令，然后添加到 vscode 的  Compile Commands 配置中，可以帮助编辑器优先跳转到预先指定路径的代码，无需手动添加头文件路径。
 
 ```
@@ -68,6 +70,28 @@ bear make xxx
 会在编译目录生成 `compile_commands.json` 文件，拷贝到根目录，在工作区添加该配置，只在工作区生效，编辑器就可以根据编译配置来跳转了。
 
 ![image-20230809104222731](figures/image-20230809104222731.png)
+
+#### 屏蔽不需要的文件
+
+在工程顶层目录中新建 `.vscode` 文件夹，在该文件夹下面新建 `settings.json` 文件 。主要通过两个配置来实现搜索时排除的目录，和在文件列表中隐藏的文件类型，分别是：`search.exclude` 和 `files.exclude`。在该文件中输入代码 (其中 ** 表示在任意目录下的文件夹)：
+
+```json
+{
+    "files.associations": {
+        "os_task.h": "c"
+    },
+
+    "search.exclude": {
+        "**/.git"           :true
+    },
+
+    "files.exclude": {
+        "**/.git"           :true
+    }
+}
+```
+
+参考文档：https://zhuanlan.zhihu.com/p/577742998
 
 ## 代码统计工具
 
