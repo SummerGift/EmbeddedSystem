@@ -162,5 +162,25 @@ ssh-add -K privateKey 中privateKey 为/Users/m/.ssh/id_rsa
 git reset --mixed HEAD~4
 ```
 
+## 回退某个文件版本
 
+要在 Git 中将某个文件回退到指定版本，你可以使用 git checkout 命令，后面跟上想要回退到的提交的哈希值和文件路径。这里是具体的步骤：
+
+1. 首先，找到你想要回退到的版本的提交哈希值。你可以使用 git log 命令查看提交历史，找到对应的提交哈希值。
+
+```
+  git log -- path/to/your/file
+```
+
+这会显示该文件的提交历史，你可以从中找到你想要回退到的那个版本的哈希值。
+
+2. 使用 git checkout 命令回退文件：
+
+```
+  git checkout <commit-hash> -- path/to/your/file
+```
+
+将 <commit-hash> 替换为你在第一步中找到的哈希值，path/to/your/file 替换为你想要回退的文件的路径。
+
+这样，指定的文件就会被回退到你选择的版本。如果你想要保留这个更改，可以直接提交这个回退的文件。
 
