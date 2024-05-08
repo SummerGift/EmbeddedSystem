@@ -1,5 +1,0 @@
-h
-speed 30000
-loadbin ./rtthread.bin,0x08000000
-r
-q
