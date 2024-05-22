@@ -212,7 +212,54 @@ su; echo 7777 > /proc/sys/kernel/printk
 
 ## 内存错误检查
 
-### 内核排查技巧
+### 内核模块
 
-### 用户排查技巧
+#### KASAN 简介
+
+KASAN (Kernel Address Sanitizer) 是 Linux 内核中的一个动态内存错误检测工具，主要用于查找使用后释放（use-after-free）和越界（out-of-bounds）错误。这是一种非常有效的方法，可以帮助开发者在开发过程中发现潜在的内存错误，从而提高代码的稳定性和安全性。
+
+#### 如何使用 KASAN
+
+1. **配置内核**：要启用 KASAN，需要在内核配置时启用 CONFIG_KASAN 选项。此外，还可以选择 CONFIG_KASAN_OUTLINE 或 CONFIG_KASAN_INLINE 两种编译器插桩类型。CONFIG_KASAN_OUTLINE 生成的二进制文件较小，而 CONFIG_KASAN_INLINE 提供更快的性能（需要 GCC 5.0 或更高版本）。
+
+  CONFIG_KASAN=y
+
+  CONFIG_KASAN_INLINE=y # 或 CONFIG_KASAN_OUTLINE=y
+
+2. **选择内存分配器**：KASAN 可以与 SLUB 或 SLAB 内存分配器一起工作。为了更好的错误检测和报告，建议启用 CONFIG_STACKTRACE。
+3. **禁用特定文件的插桩**：如果需要，可以在特定的内核 Makefile 中禁用某些文件或目录的插桩。
+
+  KASAN_SANITIZE_main.o := n
+
+#### KASAN 可以达到的效果
+
+使用 KASAN 可以帮助开发者：
+
+**检测内存访问错误**：包括使用后释放和数组越界等常见的内存错误。
+
+**提供详细的错误报告**：当检测到内存错误时，KASAN 会提供详细的错误报告，包括错误类型、发生错误的位置、相关的内存状态等信息。这些信息对于开发者定位和修复问题非常有帮助。
+
+#### 错误报告示例
+
+一个典型的越界访问错误报告可能如下所示：
+
+> ==================================================================
+>
+> BUG: AddressSanitizer: out of bounds access in kmalloc_oob_right+0x65/0x75 [test_kasan] at addr ffff8800693bc5d3
+>
+> Write of size 1 by task modprobe/1689
+>
+> =============================================================================
+>
+> BUG kmalloc-128 (Not tainted): kasan error
+>
+> \-----------------------------------------------------------------------------
+
+报告会详细描述哪种类型的访问（如写入）导致了错误，以及具体的内存地址和相关的调用栈信息。
+
+#### 实现细节
+
+KASAN 通过在编译时插入检查代码来实现内存访问的监控。它使用了一部分内核内存作为“影子内存”（shadow memory），用来记录每个内存字节的访问安全状态。每次内存访问都会通过影子内存来检查是否安全。
+
+### 用户程序
 
