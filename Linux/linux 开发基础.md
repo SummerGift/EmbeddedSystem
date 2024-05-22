@@ -1,6 +1,13 @@
-# Kernel Dev Skills
+# Linux 开发基础
 
-## kernel 代码格式化 
+## 内核配置
+
+- make xxx_linux_virt_defconfig 选择一个预设的
+- make menuconfig 进行配置
+- make savedefconfig
+- cp defconfig 存储到指定目录
+
+## 代码格式化 
 
 可以先使用 Astyle 进行代码格式化，然后再使用 `checkpatch` 脚本检查代码是否符合规范要求。
 
@@ -56,10 +63,9 @@ git format-patch --stdout -1 | scripts/checkpatch.pl --no-signoff --no-changeid 
 su; echo 7777 > /proc/sys/kernel/printk
 ```
 
-## 存储 deconfig 文件
+## 内存错误检查
 
-- make xxx_linux_virt_defconfig 选择一个预设的
-- make menuconfig 进行配置
-- make savedefconfig
-- cp defconfig 存储到指定目录
+### 内核排查技巧
+
+### 用户排查技巧
 

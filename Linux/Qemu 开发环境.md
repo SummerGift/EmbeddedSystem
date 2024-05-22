@@ -106,32 +106,33 @@ qemu-system-arm \
 
 ### 4.2 开启内核 nfs 功能并重新编译
 
-VFS: Unable to mount root fs via NFS, trying floppy.
-VFS: Cannot open root device "nfs" or unknown-block(2,0): error -6
-Please append a correct "root=" boot option; here are the available partitions:
-1f00          131072 mtdblock0 
- (driver?)
-1f01           32768 mtdblock1 
- (driver?)
-b300           32768 mmcblk0 
- driver: mmcblk
-Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(2,0)
-CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.20.17 #3
-Hardware name: ARM-Versatile Express
-[<80110914>] (unwind_backtrace) from [<8010c80c>] (show_stack+0x10/0x14)
-[<8010c80c>] (show_stack) from [<80705078>] (dump_stack+0x88/0x9c)
-[<80705078>] (dump_stack) from [<801207ac>] (panic+0x110/0x27c)
-[<801207ac>] (panic) from [<80a01598>] (mount_block_root+0x1ec/0x2d8)
-[<80a01598>] (mount_block_root) from [<80a017c8>] (mount_root+0x144/0x160)
-[<80a017c8>] (mount_root) from [<80a01934>] (prepare_namespace+0x150/0x198)
-[<80a01934>] (prepare_namespace) from [<80a01180>] (kernel_init_freeable+0x340/0x354)
-[<80a01180>] (kernel_init_freeable) from [<8071bbb0>] (kernel_init+0x8/0x114)
-[<8071bbb0>] (kernel_init) from [<801010e8>] (ret_from_fork+0x14/0x2c)
-Exception stack(0x9f48ffb0 to 0x9f48fff8)
-ffa0:                                     00000000 00000000 00000000 00000000
-ffc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
-ffe0: 00000000 00000000 00000000 00000000 00000013 00000000
----[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(2,0) ]---
+> VFS: Unable to mount root fs via NFS, trying floppy.
+> VFS: Cannot open root device "nfs" or unknown-block(2,0): error -6
+> Please append a correct "root=" boot option; here are the available partitions:
+> 1f00          131072 mtdblock0 
+>  (driver?)
+> 1f01           32768 mtdblock1 
+>  (driver?)
+> b300           32768 mmcblk0 
+>  driver: mmcblk
+> Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(2,0)
+> CPU: 0 PID: 1 Comm: swapper/0 Not tainted 4.20.17 #3
+> Hardware name: ARM-Versatile Express
+> [<80110914>] (unwind_backtrace) from [<8010c80c>] (show_stack+0x10/0x14)
+> [<8010c80c>] (show_stack) from [<80705078>] (dump_stack+0x88/0x9c)
+> [<80705078>] (dump_stack) from [<801207ac>] (panic+0x110/0x27c)
+> [<801207ac>] (panic) from [<80a01598>] (mount_block_root+0x1ec/0x2d8)
+> [<80a01598>] (mount_block_root) from [<80a017c8>] (mount_root+0x144/0x160)
+> [<80a017c8>] (mount_root) from [<80a01934>] (prepare_namespace+0x150/0x198)
+> [<80a01934>] (prepare_namespace) from [<80a01180>] (kernel_init_freeable+0x340/0x354)
+> [<80a01180>] (kernel_init_freeable) from [<8071bbb0>] (kernel_init+0x8/0x114)
+> [<8071bbb0>] (kernel_init) from [<801010e8>] (ret_from_fork+0x14/0x2c)
+> Exception stack(0x9f48ffb0 to 0x9f48fff8)
+> ffa0:                                     00000000 00000000 00000000 00000000
+> ffc0: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+> ffe0: 00000000 00000000 00000000 00000000 00000013 00000000
+> ---[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(2,0) ]---
+>
 
 
 ### 4.3 从网上搜索的解决办法
