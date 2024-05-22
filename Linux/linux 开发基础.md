@@ -2,10 +2,19 @@
 
 ## 内核配置
 
+### 设置 kconfig
+
 - make xxx_linux_virt_defconfig 选择一个预设的
 - make menuconfig 进行配置
 - make savedefconfig
 - cp defconfig 存储到指定目录
+
+### 重定位内核打印
+
+```
+su; echo 7777 > /proc/sys/kernel/printk
+```
+
 
 ## 代码格式化 
 
@@ -202,12 +211,6 @@ addresses unmodified. If you *really* always want the unmodified address, see
 If (and only if) you are printing addresses as a content of a virtual file in
 e.g. procfs or sysfs (using e.g. seq_printf(), not printk()) read by a
 userspace process, use the %pK modifier described below instead of %p or %px.
-```
-
-## 重定位内核打印
-
-```
-su; echo 7777 > /proc/sys/kernel/printk
 ```
 
 ## 内存错误检查
