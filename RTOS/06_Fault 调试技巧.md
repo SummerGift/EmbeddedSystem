@@ -2,6 +2,18 @@
 
 记录在嵌入式开发的过程中的调试技巧，包括在 RTOS 以及 Linux 环境，用户态和内核态的调试经验。
 
+## 问题解决思路
+
+1. 充分理解问题
+
+2. 尝试复现问题
+
+3. 识别根本原因
+
+4. 修复该问题
+
+5. 检查是否修复成功，失败则返回第一步
+
 ## 常用技巧
 
 ### 反汇编
@@ -72,16 +84,24 @@ aarch64-none-elf-objdump -D xxx.o > xxx.S
    aarch64-none-elf-addr2line -e xxxx.elf -f -a -p -C 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx
    ```
 
+### 读取符号表
+
+可以使用 `readelf` 命令查看可执行文件中符号的链接位置，便于分析程序链接情况。
+
+```shell
+aarch64-linux-gnu-readelf -S vmlinux
+```
+
 ### 分析符号表
 
 nm 工具是用来显示目标文件、库或可执行文件的符号表信息的命令行工具。这些符号可能包括变量名、函数名、对象等。以下是如何使用 nm 来分析符号表的基本步骤和选项：
 
-### 基本用法
+#### 基本用法
 
 > nm [选项] 文件名
 >
 
-### 常用选项
+#### 常用选项
 
 > -A 或 --print-file-name：在每行前显示文件名。
 >
@@ -101,7 +121,7 @@ nm 工具是用来显示目标文件、库或可执行文件的符号表信息�
 >
 > -u 或 --undefined-only：只显示未定义的符号。
 
-### 示例
+#### 示例
 
 假设你有一个名为 libexample.so 的共享库文件，你可以使用以下命令来查看其符号表：
 
@@ -115,11 +135,11 @@ nm 工具是用来显示目标文件、库或可执行文件的符号表信息�
 
 > nm -n -S libexample.so
 
-### 解释输出
+#### 解释输出
 
 nm 的输出通常包括符号的地址、类型（如 T 表示 text/代码段，D 表示已初始化数据段，B 表示未初始化数据段，U 表示未定义等）和符号名。如果使用了 -C 选项，符号名将会是解析后的形式，特别是对于 C++ 的符号非常有用。
 
-### 高级用法
+#### 高级用法
 
 对于更复杂的分析，你可能需要结合使用 grep 或 awk 等工具来过滤和处理 nm 的输出。例如，如果你只想查看所有未定义的符号，可以使用：
 
@@ -155,14 +175,6 @@ aarch64-linux-gnu-gcc -S test.i -o test.s
 
 ```shell
 aarch64-linux-gnu-gcc -c test.s -o test.o
-```
-
-### 读取符号表
-
-可以使用 `readelf` 命令查看可执行文件中符号的链接位置，便于分析程序链接情况。
-
-```shell
-aarch64-linux-gnu-readelf -S vmlinux
 ```
 
 ### 修改 bin 固件体积
@@ -347,7 +359,7 @@ md5sum xx.elf
 52294aacc76a732e7a4ed304b24985f0  xx.elf
 ```
 
-## 使用 GDB
+## GDB 调试
 
 ### 开发配置
 
@@ -384,16 +396,16 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 
 - `gdb-multiarch rtthread.elf -ex "tar ext localhost:1234" -tui`
 
-## GDB 调试操作
+### GDB 调试操作
 
-### 打开和关闭
+#### 打开和关闭
 
 | 命令                     | 说明           |
 | ------------------------ | -------------- |
 | ctrl + d                 | 退出 GDB       |
 | ctrl + a，松开后再按下 x | 退出 QEMU 调试 |
 
-### 常用调试命令
+#### 常用调试命令
 
 | 命令    | 说明                                                         |
 | ------- | ------------------------------------------------------------ |
@@ -412,7 +424,7 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 
 如果打 s、n 指令的话，必须要有源代码支持，如果没有源代码支持，只能打出 si、ni，这里  si ni 是针对反汇编指令来说的，如果有源代码的话就可以使用 s、n 指令。
 
-### 信息查询与断点操作
+#### 信息查询与断点操作
 
 | 命令           | 说明                                 |
 | -------------- | ------------------------------------ |
@@ -422,12 +434,12 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 | del + 断点编号 | 删除指定编号的断点                   |
 | info files    | 查询加载的符号表文件                 |
 
-### 查看反汇编
+#### 查看反汇编
 
 1. 按下 ctrl + x 然后再按下 2 将会切换视图，例如汇编视图和寄存器视图
 2. 按下 ctrl + x 然后再按下 1 将会聚焦选择其中一个视图
 
-### 调试示例
+#### 调试示例
 
 因为 RT-Smart 内核的加载地址与链接地址不一致，所以开始调试时，只能将调试断点打在 MMU 使能之后。
 
@@ -441,9 +453,9 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 
 <img src="figures/image-20210511102234530.png" alt="image-20210511102234530" style="zoom:50%;" />
 
-### 数据断点
+#### 数据断点
 
-#### 监控变量名
+##### 监控变量名
 
 使用变量名 watch var，var 为变量的名字。
 
@@ -476,7 +488,7 @@ main () at test_gdb.c:24
 
 ```
 
-#### 监控变量地址
+##### 监控变量地址
 
 watch addr，除了直接使用变量名之外，还可以使用变量名的地址来进行监控。
 
@@ -519,7 +531,7 @@ main () at test_gdb.c:24
 
 ![image-20220713095914199](figures/image-20220713095914199.png)
 
-### 通过函数查看地址
+#### 通过函数查看地址
 
 info address function_name，示例如下：
 
@@ -528,7 +540,7 @@ info address function_name，示例如下：
 Symbol "test" is a function at address 0x9e250
 ```
 
-### 通过地址查看函数名
+#### 通过地址查看函数名
 
 info symbol func_addr，示例如下：
 
@@ -544,7 +556,7 @@ gdb-multiarch vmlinux
 (gdb) 1* 0xffffffc0103c5e34
 ```
 
-### 查询函数反汇编
+#### 查询函数反汇编
 
 使用 GDB 反汇编指定的函数，注意函数不要 static 避免被优化掉就查不到了，以及要编译 debug 版本。
 
@@ -555,7 +567,7 @@ gdb-multiarch firmware.elf
 disassemble symbol
 ```
 
-### 加载与链接地址不同
+#### 加载与链接地址不同
 
 在 RT-Smart 调试的过程中，发现如果把断点打在 `_reset` 符号时，执行调试时无法停在指定的断点，这个问题的原因是程序的链接地址与加载地址不一致导致的。
 
@@ -575,7 +587,7 @@ b *((char *)_reset + 0xa0000000)
 
 这里的 PV_OFFSET 是 0xa0000000 而不是 0x60000000，是因为要用物理地址减去虚拟地址，而不是用虚拟地址减去物理地址.
 
-### 重新加载符号表
+#### 重新加载符号表
 
 ```shell
 aarch64-linux-gnu-readelf -S vmlinux
@@ -600,6 +612,10 @@ aarch64-linux-gnu-readelf -S vmlinux
 | 而 GDB 中的 add-symbol-file 命令 | `add-symbol-file filename [ textaddress ] [-s section address ... ]` |
 
 其中 `textaddress` 指的是文件镜像将要加载的地址。因此，DS-5 和 GDB 中的参数有区别。
+
+### 参考资料
+
+- [GDB 调试参考](https://blog.csdn.net/u011003120/article/details/109813935)
 
 ## Trace32 基础命令
 
@@ -650,19 +666,3 @@ aarch64-linux-gnu-readelf -S vmlinux
 |                                                  | 示例 2 通过 `eaxi` 视角 dump DDR 中的数据到 bin 文件， 使用 `eaxi` 视角的原因是有时候 mater 没有访问特定 DDR 的权限。 |
 |                                                  | `data.save.binary data_dump.bin eaxi:0x80000000--0x80001000` |
 | `mmu.dump pagetable 0x1800000000`                | 对虚拟地址 0x1800000000 进行 Walk page table                 |
-
-## 问题解决思路
-
-1. 充分理解问题
-
-2. 尝试复现问题
-
-3. 识别根本原因
-
-4. 修复该问题
-
-5. 检查是否修复成功，失败则返回第一步
-
-## 参考资料
-
-- [GDB 调试参考](https://blog.csdn.net/u011003120/article/details/109813935)
