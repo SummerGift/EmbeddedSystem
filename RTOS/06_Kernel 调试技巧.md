@@ -1,10 +1,10 @@
-# RTOS 内核调试技巧
+# Kernel 调试技巧
 
-记录在嵌入式开发的过程中的调试技巧。
+记录在嵌入式开发的过程中的调试技巧，包括在 RTOS 以及 Linux 环境。
 
-## 基础技巧
+## 常用技巧
 
-### 代码反汇编
+### 反汇编
 
 在代码调试以及查找错误时，有时会需要对 elf 进行反汇编做代码查看和对比的情况，此时需要使用工具链进行反汇编，命令如下：
 
@@ -12,17 +12,126 @@
 arm-linux-musleabi-objdump -S rtthread.elf > rtthread.S
 ```
 
+在调试 ko 时，可以反汇编 ko 文件进行 debug：
+
+```
+aarch64-none-elf-objdump -D xxx_module.ko > xxx_module.S
+```
+
+同样的，也可以对动态链接库 so 进行反汇编：
+
+```
+aarch64-none-linux-gnu-objdump -D xxx.so > xxx_so.S
+```
+
+当然也可以直接对 .o 文件进行反汇编，虽然 .o 文件中的符号还没有被重定位，但是函数中指令的相对地址是固定的：
+
+```
+aarch64-none-elf-objdump -D xxx.o > xxx.S
+```
+
+在反汇编操作后，可以就可以根据报错的信息来查询出错的指令了，例如 `xxx_handle+0x68`，的意思是说出错的指令在 `xxx_handle` 符号后偏移 0x68 的位置。
+
+### 定位代码行
+
+根据反汇编分析，我们已经可以找到出错的指令，但是有些时候将指令和具体的代码对应起来还需要一番仔细查看，此时可以使用 addr2line 工具来辅助，addr2line 是一个用于将地址转换为文件名和行号的工具，通常用于调试。以下是一些常用的参数：
+
+> -a 或 --addresses: 在输出中包括地址。这对于从日志文件中直接查看地址很有用。
+>
+> -p 或 --pretty-print: 使输出更易于阅读，将信息打印在一行上，包括函数名、文件名和行号。
+>
+> -f 或 --functions: 显示函数名。这是在调试时了解程序在哪个函数中出错非常有用的信息。
+>
+> -c 或 --demangle: 解析低级别的符号名称到用户级别的名称，通常用于C++代码，因为C++编译器会改变函数名（名字改编）。
+
+具体步骤如下：
+
+1. **确保你的 .so 文件包含调试信息**：如果没有调试信息，addr2line 可能无法提供准确的源代码位置。编译时需要加上 -g 选项。
+
+2. 使用 addr2line 命令：指定 .so 文件和地址。假设你的 .so 文件路径是 /path/to/libxxx.so，地址是 0x68，你可以使用以下命令：
+
+   ```
+   aarch64-none-linux-gnu-addr2line -e /path/to/libxxx.so 0xc8
+   ```
+
+3. **如果地址是相对地址**：有时地址是相对地址（如 xxx_function +0x68），你需要找到 xxx_function 的基地址，然后加上偏移量 0x68。假设 xxx_function 的基地址是 0x1000，那么实际地址是 0x1000 + 0x68 = 0x10c8。然后使用 addr2line：
+
+   ```
+   aarch64-none-linux-gnu-addr2line -e /path/to/libxxx.so 0x1068
+   ```
+
+4. 为了更易读，可以加上 -f -a -p -C 选项：
+
+   ```
+   aarch64-none-linux-gnu-addr2line -e /path/to/libxxx.so -f -a -p -C 0x1068 
+   ```
+
+5. 还可以在命令后面跟多个地址来查询调用栈：
+
+   ```
+   aarch64-none-elf-addr2line -e xxxx.elf -f -a -p -C 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx
+   ```
+
+### 分析符号表
+
+nm 工具是用来显示目标文件、库或可执行文件的符号表信息的命令行工具。这些符号可能包括变量名、函数名、对象等。以下是如何使用 nm 来分析符号表的基本步骤和选项：
+
+### 基本用法
+
+> nm [选项] 文件名
+>
+
+### 常用选项
+
+> -A 或 --print-file-name：在每行前显示文件名。
+>
+> -C 或 --`demangle`：解析（`demangle`）C++ 符号名称，使其更易于阅读。
+>
+> -D 或 --dynamic：显示动态符号而非所有符号。
+>
+> -g 或 --extern-only：只显示外部符号（global symbols）。
+>
+> -n 或 --numeric-sort：按地址排序输出。
+>
+> -p 或 --no-sort：不排序输出。
+>
+> -r 或 --reverse-sort：反向排序输出。
+>
+> -S 或 --print-size：显示符号的大小。
+>
+> -u 或 --undefined-only：只显示未定义的符号。
+
+### 示例
+
+假设你有一个名为 libexample.so 的共享库文件，你可以使用以下命令来查看其符号表：
+
+> nm -C libexample.so
+
+如果你只对动态符号感兴趣，可以使用：
+
+> nm -D -C libexample.so
+
+如果你想按符号的地址排序并显示符号大小，可以使用：
+
+> nm -n -S libexample.so
+
+### 解释输出
+
+nm 的输出通常包括符号的地址、类型（如 T 表示 text/代码段，D 表示已初始化数据段，B 表示未初始化数据段，U 表示未定义等）和符号名。如果使用了 -C 选项，符号名将会是解析后的形式，特别是对于 C++ 的符号非常有用。
+
+### 高级用法
+
+对于更复杂的分析，你可能需要结合使用 grep 或 awk 等工具来过滤和处理 nm 的输出。例如，如果你只想查看所有未定义的符号，可以使用：
+
+> nm -u libexample.so
+>
+
 ### DTB 反汇编
 
 ```
 dtc -I dtb -O dts dtb.img -o xxx.dts
 ```
 
-### kernel module 反汇编
-
-```
-aarch64-none-elf-objdump -D xxx_module.ko > xxx_module.S
-```
 
 ### 预处理
 
@@ -46,6 +155,14 @@ aarch64-linux-gnu-gcc -S test.i -o test.s
 
 ```shell
 aarch64-linux-gnu-gcc -c test.s -o test.o
+```
+
+### 读取符号表
+
+可以使用 `readelf` 命令查看可执行文件中符号的链接位置，便于分析程序链接情况。
+
+```shell
+aarch64-linux-gnu-readelf -S vmlinux
 ```
 
 ### 修改 bin 固件体积
@@ -78,19 +195,9 @@ __start:
 - 某个变量在没有主动修改的时候突然发生改变
 - 系统经常崩溃，但是出错的情况很随机，莫名奇妙出现各种故障，例如 data abort 或者 prefetch abort 等
 
-### 读取符号表
-
-可以使用 readelf 命令查看可执行文件中符号的链接位置，便于分析程序链接情况。
-
-```shell
-aarch64-linux-gnu-readelf -S vmlinux
-```
-
 ### 利用内联汇编
 
-可以参考详细 [ Arm 内联汇编语法](http://www.ethernut.de/en/documents/arm-inline-asm.html)。
-
-系统在 C 语言环境下可以使用内联汇编读取系统状态。
+可以参考详细 [ Arm 内联汇编语法](http://www.ethernut.de/en/documents/arm-inline-asm.html)，在 C 语言环境下可以使用内联汇编读取系统状态。
 
 ```c
 __asm__ volatile ("mrs %0, cpsr" : "=r"(cp_value) : : "memory");
@@ -231,20 +338,6 @@ This will read the 32-bit value at address 0x1000, clear bits 5-8, set bits 5-8 
 
 Note that the second argument (startbit) specifies the starting bit position of the field you want to modify, and the third argument (width) specifies the width of the field in bits. The fourth argument (val) is the value you want to write to the field.
 
-### addr2line
-
-根据程序地址找到代码所在行，有些情况下需要使用对应工具链的 addr2line 来检查才可以，否则可能无法找到对应的代码行。
-
-```
-addr2line -e xxx.elf 0x133bc -f -a -p -C
-```
-
-上面的命令如果无法工作，则需要使用下列命令：
-
-```
-/gcc/gcc-arm-11.2-2022.02-x86_64-aarch64-none-elf/bin/aarch64-none-elf-addr2line -e xxxx.elf -f -a -p -C 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx 0xffff00000000xxxx
-```
-
 ### 查看 MD5
 
 有时需要查看文件是否一致，一个更稳妥的方法是查看文件的 MD5 值，例如：
@@ -268,7 +361,7 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 
 2. 编译项目
 
-- scons 编译工程（编译选项需要加 -g 参数，在 elf 中加入调试信息）
+- `scons` 编译工程（编译选项需要加 -g 参数，在 elf 中加入调试信息）
 - 生成 elf 格式的可执行文件
 - 运行 `qemu-dbg.bat` 以调试模式启动 QEMU 模拟
 
