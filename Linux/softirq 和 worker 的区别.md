@@ -204,6 +204,149 @@ restart:
 }
 ```
 
+### mutex 路径
+
+```c
+static int __sched
+__rt_mutex_slowlock(struct rt_mutex *lock, int state,
+		    struct hrtimer_sleeper *timeout,
+		    struct rt_mutex_waiter *waiter,
+		    struct ww_acquire_ctx *ww_ctx)
+{
+	int ret = 0;
+
+	for (;;) {
+		/* Try to acquire the lock: */
+		if (try_to_take_rt_mutex(lock, current, waiter))
+			break;
+
+		if (timeout && !timeout->task) {
+			ret = -ETIMEDOUT;
+			break;
+		}
+		if (signal_pending_state(state, current)) {
+			ret = -EINTR;
+			break;
+		}
+
+		if (ww_ctx && ww_ctx->acquired > 0) {
+			ret = __mutex_lock_check_stamp(lock, ww_ctx);
+			if (ret)
+				break;
+		}
+
+		raw_spin_unlock_irq(&lock->wait_lock);
+
+		schedule();
+
+		raw_spin_lock_irq(&lock->wait_lock);
+		set_current_state(state);
+	}
+
+	__set_current_state(TASK_RUNNING);
+	return ret;
+}
+
+```
+
+
+
+```
+asmlinkage __visible void __sched schedule(void)
+{
+	struct task_struct *tsk = current;
+
+	sched_submit_work(tsk);
+	do {
+		preempt_disable();
+		__schedule(false, false);
+		sched_preempt_enable_no_resched();
+	} while (need_resched());
+	sched_update_worker(tsk);
+}
+EXPORT_SYMBOL(schedule);
+```
+
+```
+static void __sched notrace __schedule(bool preempt, bool spinning_lock)
+{
+	struct task_struct *prev, *next;
+	unsigned long *switch_count;
+	unsigned long prev_state;
+	struct rq_flags rf;
+	struct rq *rq;
+	int cpu;
+
+	cpu = smp_processor_id();
+	rq = cpu_rq(cpu);
+	prev = rq->curr;
+
+	schedule_debug(prev, preempt);
+
+	if (sched_feat(HRTICK))
+		hrtick_clear(rq);
+
+	local_irq_disable();
+	rcu_note_context_switch(preempt);
+
+	/*
+	 * Make sure that signal_pending_state()->signal_pending() below
+	 * can't be reordered with __set_current_state(TASK_INTERRUPTIBLE)
+	 * done by the caller to avoid the race with signal_wake_up():
+	 *
+	 * __set_current_state(@state)		signal_wake_up()
+	 * schedule()				  set_tsk_thread_flag(p, TIF_SIGPENDING)
+	 *					  wake_up_state(p, state)
+	 *   LOCK rq->lock			    LOCK p->pi_state
+	 *   smp_mb__after_spinlock()		    smp_mb__after_spinlock()
+	 *     if (signal_pending_state())	    if (p->state & @state)
+	 *
+	 * Also, the membarrier system call requires a full memory barrier
+	 * after coming from user-space, before storing to rq->curr.
+	 */
+	rq_lock(rq, &rf);
+	smp_mb__after_spinlock();
+```
+
+```c
+void rcu_note_context_switch(bool preempt)
+{
+	struct task_struct *t = current;
+	struct rcu_data *rdp = this_cpu_ptr(&rcu_data);
+	struct rcu_node *rnp;
+
+	trace_rcu_utilization(TPS("Start context switch"));
+	lockdep_assert_irqs_disabled();
+	WARN_ON_ONCE(!preempt && rcu_preempt_depth() > 0);
+	if (rcu_preempt_depth() > 0 &&
+	    !t->rcu_read_unlock_special.b.blocked) {
+
+		/* Possibly blocking in an RCU read-side critical section. */
+		rnp = rdp->mynode;
+		raw_spin_lock_rcu_node(rnp);
+		t->rcu_read_unlock_special.b.blocked = true;
+		t->rcu_blocked_node = rnp;
+
+		/*
+		 * Verify the CPU's sanity, trace the preemption, and
+		 * then queue the task as required based on the states
+		 * of any ongoing and expedited grace periods.
+		 */
+		WARN_ON_ONCE((rdp->grpmask & rcu_rnp_online_cpus(rnp)) == 0);
+		WARN_ON_ONCE(!list_empty(&t->rcu_node_entry));
+		trace_rcu_preempt_task(rcu_state.name,
+				       t->pid,
+				       (rnp->qsmask & rdp->grpmask)
+				       ? rnp->gp_seq
+				       : rcu_seq_snap(&rnp->gp_seq));
+		rcu_preempt_ctxt_queue(rnp, rdp);
+	} else {
+		rcu_preempt_deferred_qs(t);
+	}
+```
+
+
+
 ## Worker 上下文
 
 1. **定义和用途：** Worker 是工作队列的一部分，用于执行可能需要较长时间或需要能够睡眠的任务。工作队列是一种机制，允许将任务推迟到将来某个时刻异步执行。
