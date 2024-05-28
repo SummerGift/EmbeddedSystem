@@ -9,12 +9,49 @@
 - make savedefconfig
 - cp defconfig 存储到指定目录
 
-### 重定位内核打印
+### 修改 kernel log level
+
+内核通过`printk()` 输出的信息具有日志级别，日志级别是通过在`printk()` 输出的字符串前加一个带尖括号的整数来控制的，如`printk("<6>Hello, world!\n");`。内核中共提供了八种不同的日志级别，在 `linux/kernel.h` 中有相应的宏对应。
 
 ```
-su; echo 7777 > /proc/sys/kernel/printk
+#define KERN_EMERG  "<0>"   /* systemis unusable */
+#define KERN_ALERT  "<1>"   /* actionmust be taken immediately */
+#define KERN_CRIT    "<2>"   /*critical conditions */
+#define KERN_ERR     "<3>"   /* errorconditions */
+#define KERN_WARNING "<4>"   /* warning conditions */
+#define KERN_NOTICE  "<5>"   /* normalbut significant */
+#define KERN_INFO    "<6>"   /*informational */
+#define KERN_DEBUG   "<7>"   /*debug-level messages */
 ```
 
+未指定日志级别的`printk()` 采用的默认级别是`DEFAULT_MESSAGE_LOGLEVEL`，这个宏在`kernel/printk.c` 中被定义为整数4，即对应`KERN_WARNING`。 **在宏定义中，数值越小，优先级越高，其紧急和严重程度就越高。**
+
+1. 控制台日志级别：优先级高于该值的消息将被打印至控制台。 
+2. 缺省的消息日志级别：将用该值来打印没有优先级的消息。
+3. 最低的控制台日志级别：控制台日志级别可能被设置的最小值。
+4. 缺省的控制台：控制台日志级别的缺省值。
+
+这四个值是在`kernel/printk.c`中被定义的：
+
+```
+int console_printk[4] = {
+
+                DEFAULT_CONSOLE_LOGLEVEL,       /* console_loglevel */
+
+                DEFAULT_MESSAGE_LOGLEVEL,       /* default_message_loglevel */
+
+                MINIMUM_CONSOLE_LOGLEVEL,     /* minimum_console_loglevel */
+
+                DEFAULT_CONSOLE_LOGLEVEL,       /* default_console_loglevel */
+
+};
+```
+
+修改 log 等级命令：
+
+```
+su;echo 8 8 8 8 > /proc/sys/kernel/printk
+```
 
 ## 代码格式化 
 
