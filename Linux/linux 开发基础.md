@@ -53,6 +53,17 @@ int console_printk[4] = {
 su;echo 8 8 8 8 > /proc/sys/kernel/printk
 ```
 
+### 重定向 log 到文件
+
+linux下执行程序：
+
+```
+shell cmd >>log.txt 2>&1
+```
+
+
+标准输出重定向Q到文件,用于在执行程序时重定向标准输出。
+
 ## 代码格式化 
 
 可以先使用 Astyle 进行代码格式化，然后再使用 `checkpatch` 脚本检查代码是否符合规范要求。
