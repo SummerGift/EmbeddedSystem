@@ -361,6 +361,10 @@ md5sum xx.elf
 
 ## GDB 调试
 
+### 官方文档
+
+https://sourceware.org/gdb/current/onlinedocs/gdb.html/
+
 ### 开发配置
 
 1. 在 `~/.bachrc` 配置好工具链地址，避免重复配置。
