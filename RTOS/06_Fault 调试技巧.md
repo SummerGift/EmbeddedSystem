@@ -437,6 +437,7 @@ export PATH=$PATH:$RTT_EXEC_PATH:$RTT_EXEC_PATH/../arm-linux-musleabi/bin
 | ena + 断点编号 | 使指定编号的断点 enable              |
 | del + 断点编号 | 删除指定编号的断点                   |
 | info files    | 查询加载的符号表文件                 |
+| info proc mappings | 检查链接库在应用程序中的映射地址 |
 
 #### 查看反汇编
 
